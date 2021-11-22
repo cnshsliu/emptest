@@ -1,0 +1,19 @@
+{
+  "name": "emptest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "lucaskhliu <liukehong@gmail.com> (https://www.metatocome.com/)",
+  "license": "ISC",
+  "dependencies": {
+    "@hapi/code": "^8.0.5",
+    "@hapi/lab": "^24.4.0",
+    "axios": "^0.24.0",
+    "metaflow": "^1.0.1",
+    "uuid": "^8.3.2",
+    "uuidv4": "^6.2.12"
+  }
+}
