@@ -7,7 +7,7 @@
   </div>
   <div class="node SCRIPT" id="script1" style="z-index: 0; left: 300px; top: 380px;">
     <code>
-YXdhaXQgRU1QLmxvZ2luKCJsaXVrZWhvbmdAZ21haWwuY29tIiwgIkplcm9tZUA5OSIpOwogICAgbGV0IHRtcCAgPSBhd2FpdCBFTVAucG9zdCgiaHR0cDovL2xvY2FsaG9zdDo1MDA4L2RlbW8vYXBpIik7CiAgICByZXQgPSB0bXAuaW50dj09PTEwMD8iWUVTIjoiTk8iOw==
+ICAgICAgbGV0IHRtcCAgPSBhd2FpdCBNdGNBUElBZ2VudC5wb3N0KCJodHRwOi8vZW1wLmxvY2FsaG9zdDo1MDA4L2RlbW8vYXBpIiwge30gKTsKICAgIHJldCA9IHRtcC5kYXRhLmludHY9PT0xMDA/IllFUyI6Ik5PIjsK
     </code>
   </div>
   <div class="node ACTION" id="actionYES" style="z-index: 0; left: 560px; top: 360px;">

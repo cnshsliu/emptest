@@ -6,7 +6,7 @@
         <p>Action1</p>
     </div>
     <div class="node SCRIPT" id="switch1" style="z-index: 0; left: 460px; top: 400px;">
-        <code>cmV0dXJuIChrdmFycy5kYXlzLnZhbHVlPDUpPyd0b19lbmQnOid0b19hY3Rpb24yJzs=</code>
+        <code>cmV0ID0gKE10Y0dldCgiZGF5cyIpPDUpPyd0b19lbmQnOid0b19hY3Rpb24yJzs=</code>
     </div>
     <div class="node ACTION" id="action2" style="z-index: 0; left: 580px; top: 240px;">
         <p>Action2</p>

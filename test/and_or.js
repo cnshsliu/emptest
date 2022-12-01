@@ -1,57 +1,154 @@
 "use strict";
 
-const Lab = require("@hapi/lab");
+const { describe, it } = require("node:test");
 const { expect } = require("@hapi/code");
-const { afterEach, beforeEach, describe, it } = (exports.lab = Lab.script());
+const SDK = require("../app.js");
 const fs = require("fs");
-const SDK = require("metaflow");
+const SITE_PWD = "site_password_999";
+const SITE_ADMIN = { account: "lucas2", name: "Lucas2", password: "Pwd@123" };
 
-const TEST_USER = process.env.TEST_USER || "liukehong@gmail.com";
-const TEST_PASSWORD = process.env.TEST_PASSWORD || "psammead";
-const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "unknown_folder";
+const testUsers = [
+  {
+    account: "and_or_test_user_lkh",
+    passwd: "Password@123",
+    name: "UserLKH_" + SDK.randomString(7),
+  },
+  {
+    account: "and_or_test_user_001",
+    passwd: "Password@123",
+    name: "User001_" + SDK.randomString(7),
+  },
+  {
+    account: "and_or_test_user_002",
+    passwd: "Password@123",
+    name: "User002_" + SDK.randomString(7),
+  },
+  {
+    account: "and_or_test_user_003",
+    passwd: "Password@123",
+    name: "User003_" + SDK.randomString(7),
+  },
+  {
+    account: "and_or_test_user_004",
+    passwd: "Password@123",
+    name: "User004_" + SDK.randomString(7),
+  },
+  {
+    account: "and_or_test_user_005",
+    passwd: "Password@123",
+    name: "User005_" + SDK.randomString(7),
+  },
+  {
+    account: "and_or_test_user_006",
+    passwd: "Password@123",
+    name: "User006_" + SDK.randomString(7),
+  },
+];
+const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
-describe("Test: ", () => {
-  beforeEach(async () => {});
-
-  afterEach(async () => {});
-
+describe("Test and_or logic", async () => {
   let wfid = "lkh_" + SDK.guid();
-  let tmpworkid = "";
-  SDK.setServer("http://localhost:5008");
-  it("Login", async () => {
-    const ret = await SDK.login(TEST_USER, TEST_PASSWORD);
-    expect(ret.user.username).to.not.be.empty();
+  let tmptodoid = "";
+  SDK.setServer("http://emp.localhost:5008");
+  SDK.debug(false);
+
+  it("prepare admin account ", async () => {
+    try {
+      await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
+    } catch (e) {}
+  });
+  it("and_or Login", async () => {
+    //清理掉遗留的测试用户
+    try {
+      await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
+      for (let i = 0; i < testUsers.length; i++) {
+        let ret = await SDK.removeUser(testUsers[i].account, SITE_PWD);
+        console.log(ret);
+        expect(ret.deleted).to.equal(testUsers[i].account);
+      }
+    } finally {
+    }
+    //重新注册所有测试用户
+    for (let i = 0; i < testUsers.length; i++) {
+      let ret = await SDK.register(testUsers[i].account, testUsers[i].name, testUsers[i].passwd);
+      console.log(ret);
+      expect(ret.account).to.equal(testUsers[i].account);
+    }
+    let ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);
+    let tenant_id = ret.user.tenant._id.toString();
+    expect(ret.user?.username).to.not.be.empty();
+    //清理遗留的申请信息
+    await SDK.orgClearJoinApplications();
+
+    //将当前用户的tenant设为组织
+    await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
+    ret = await SDK.post("/tnt/set/orgmode", { password: SITE_PWD, tenant_id: tenant_id });
+    expect(ret).to.equal(true);
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
+
+    let joincodeRet = await SDK.orgJoinCodeNew();
+    //申请加入组织
+    for (let i = 1; i < testUsers.length; i++) {
+      await SDK.login(testUsers[i].account, testUsers[i].passwd);
+
+      let ret = await SDK.orgJoin(joincodeRet.joincode);
+      expect(ret.code).to.equal("ok");
+    }
+
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
+    //获得组织全部信息
+    let myorg = await SDK.orgMyOrg();
+
+    //审批测试用户加入申请
+    let accountsToApprove = myorg.joinapps.map((x) => x.account);
+    let leftApps = await SDK.orgApprove(accountsToApprove);
+    //审批后，返回的joinapps应该是空数组
+    expect(leftApps.ret).to.equal("array");
+    expect(leftApps.joinapps).to.be.an.array();
+    expect(leftApps.joinapps).to.be.empty();
+    //取myorg，同样返回的joinapps应该是空数组
+    myorg = await SDK.orgMyOrg();
+    expect(myorg.joinapps).to.be.an.array();
+    expect(myorg.joinapps).to.be.empty();
   });
 
-  it("Upload template", async () => {
+  /*
+  it("Step 2: Upload template", async () => {
     const ret = await SDK.putTemplate(
-      fs.readFileSync(TEST_TEMPLATE_DIR + "/test_and_or.xml", "utf8")
+      fs.readFileSync(TEST_TEMPLATE_DIR + "/test_and_or.xml", "utf8"),
+      "test_and_or",
+      "Desc: Test And Or Logic"
     );
     expect(ret.tplid).to.equal("test_and_or");
+    expect(ret.desc).to.equal("Desc: Test And Or Logic");
   });
 
-  it("START Workflow", async () => {
+  it("Step 3: Start Workflow", async () => {
     const pbo = "http://www.google.com";
     const ret = await SDK.startWorkflow("test_and_or", wfid, "", pbo);
+    expect(ret.wfid).to.equal(wfid);
   });
-  it("Check PBO", async () => {
-    let pbo = await SDK.getPbo(wfid);
-    expect(pbo).to.equal("http://www.google.com");
-    await SDK.setPbo(wfid, "abcd");
-    pbo = await SDK.getPbo(wfid);
-    expect(pbo).to.equal("abcd");
+
+  it("Step 4: Check PBO", async () => {
+    await SDK.sleep(500);
+    let pbo = await SDK.getPbo(wfid, "text");
+    expect(pbo[0]).to.equal("http://www.google.com");
+    pbo = await SDK.setPbo(wfid, "abcd");
+    await SDK.sleep(3000);
+    pbo = await SDK.getPbo(wfid, "text");
+    expect(pbo[0]).to.equal("abcd");
 
     await SDK.setPbo(wfid, ["abcd", "hahaha"]);
-    pbo = await SDK.getPbo(wfid);
+    pbo = await SDK.getPbo(wfid, "text");
     expect(Array.isArray(pbo)).to.equal(true);
     expect(pbo.length).to.equal(2);
   });
 
-  let action1_workid = "";
-  it("Do action1", { timeout: 5000 }, async () => {
+  let action1_todoid = "";
+  it("Step 5: Do action1", { timeout: 5000 }, async () => {
     //get worklist
-    await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, {
+    await SDK.sleep(1000);
+    let wlist = await SDK.getWorklist(testUsers[0].account, {
       wfid: wfid,
       nodeid: "action1",
       status: "ST_RUN",
@@ -59,131 +156,151 @@ describe("Test: ", () => {
     });
     expect(wlist.total).to.equal(1);
 
-    // let fullInfo = await SDK.getWorkitemFullInfo(wfid, wlist.objs[0].workid);
-    // expect(fullInfo.from_action_workid).to.be.undefined();
+    // let fullInfo = await SDK.getWorkInfo(wfid, wlist.objs[0].todoid);
+    // expect(fullInfo.from_action_todoid).to.be.undefined();
 
-    let ret = await SDK.doWork(TEST_USER, wlist.objs[0].workid, {
+    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
       input_action1: "action1",
     });
-    expect(ret.workid).to.equal(wlist.objs[0].workid);
-    action1_workid = ret.workid;
+    expect(ret.todoid).to.equal(wlist.objs[0].todoid);
+    action1_todoid = ret.todoid;
   });
 
-  it("Check worklist after action1", { timeout: 5000 }, async () => {
+  let wlist = [];
+  let action21_todoid = "";
+  let action22_todoid = "";
+  it("Step 6: Check worklist after action1", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, {
+    wlist = await SDK.getWorklist(testUsers[0].account, {
       wfid: wfid,
-      status: "ST_RUN",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(2);
-    expect(["action21", "action22"]).to.include(wlist.objs[0].nodeid);
-    expect(["action21", "action22"]).to.include(wlist.objs[1].nodeid);
+    expect(wlist.objs.map((x) => x.nodeid)).to.only.include(["action21", "action22"]);
 
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, action1_workid);
+    let fullInfo = await SDK.getWorkInfo(wfid, action1_todoid);
     expect(fullInfo.following_actions.length).to.equal(2);
     expect(fullInfo.following_actions[0].nodeid).to.equal("action21");
     expect(fullInfo.following_actions[1].nodeid).to.equal("action22");
     expect(fullInfo.following_actions[0].status).to.equal("ST_RUN");
     expect(fullInfo.following_actions[1].status).to.equal("ST_RUN");
-    expect(fullInfo.revocable).to.equal(true);
+    //expect(fullInfo.revocable).to.equal(true);
+
+    if (wlist.objs[0].nodeid === "action21") {
+      action21_todoid = wlist.objs[0].todoid;
+      action22_todoid = wlist.objs[1].todoid;
+    } else {
+      action21_todoid = wlist.objs[1].todoid;
+      action22_todoid = wlist.objs[0].todoid;
+    }
   });
 
-  let action21_workid = "";
-  it("Do action21", async () => {
-    let ret = await SDK.doWorkByNode(TEST_USER, wfid, "action21", {
+  it("Step 7: Do action21", async () => {
+    let ret = await SDK.doWork(testUsers[0].account, action21_todoid, {
       input_action21: "action21",
     });
-    expect(ret.workid).to.be.a.string();
-    action21_workid = ret.workid;
+    expect(ret.todoid).to.be.a.string();
     await SDK.sleep(500);
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, action21_workid);
+    let fullInfo = await SDK.getWorkInfo(wfid, action21_todoid);
     expect(fullInfo.following_actions).to.have.length(0);
   });
 
-  it("Check worklist after action21", { timeout: 5000 }, async () => {
+  it("Step 8: Check worklist after action21", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action22");
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, action1_workid);
+    let fullInfo = await SDK.getWorkInfo(wfid, action21_todoid);
     expect(fullInfo.revocable).to.equal(false);
   });
-  it("Do action22", async () => {
-    let ret = await SDK.doWorkByNode(TEST_USER, wfid, "action22", {
+
+  it("Step 9: Do action22", async () => {
+    let ret = await SDK.doWork(testUsers[0].account, action22_todoid, {
       input_action22: "action22",
     });
-    expect(ret.workid).to.be.a.string();
+    expect(ret.todoid).to.be.a.string();
   });
-  it("Check worklist after action 22 -> AND", { timeout: 5000 }, async () => {
+  let action3_todoid = "";
+  it("Step 10: Check worklist after action 22 -> AND", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action3");
-    let action3_fullInfo = await SDK.getWorkitemFullInfo(wfid, wlist.objs[0].workid);
-    expect(action3_fullInfo.from_actions.length).to.equal(2);
-    let action21_fullInfo = await SDK.getWorkitemFullInfo(wfid, action21_workid);
-    expect(action21_fullInfo.following_actions).to.have.length(1);
-    expect(action21_fullInfo.following_actions[0].nodeid).to.equal("action3");
-    expect(action21_fullInfo.revocable).to.equal(true);
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, action1_workid);
+    action3_todoid = wlist.objs[0].todoid;
+    let action3_fullInfo = await SDK.getWorkInfo(wfid, wlist.objs[0].todoid);
+    expect(action3_fullInfo.from_actions.length).to.equal(3);
+    let action21_fullInfo = await SDK.getWorkInfo(wfid, action21_todoid);
+    expect(action21_fullInfo.following_actions).to.have.length(2);
+    expect(action21_fullInfo.following_actions[1].nodeid).to.equal("action3");
+    expect(action21_fullInfo.revocable).to.equal(false);
+    let fullInfo = await SDK.getWorkInfo(wfid, action1_todoid);
     expect(fullInfo.revocable).to.equal(false);
   });
-  it("Do action3", async () => {
-    let ret = await SDK.doWorkByNode(TEST_USER, wfid, "action3", {
+
+  it("Step 11: Do action3", async () => {
+    let ret = await SDK.doWork(testUsers[0].account, action3_todoid, {
       input_action3: "action3",
     });
-    let workid = ret.workid;
-    expect(workid).to.be.a.string();
+    let todoid = ret.todoid;
+    expect(todoid).to.be.a.string();
     await SDK.sleep(1000);
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, workid);
-    expect(fullInfo.from_actions.length).to.equal(2);
+    let fullInfo = await SDK.getWorkInfo(wfid, todoid);
+    expect(fullInfo.from_actions.length).to.equal(3);
+    expect(fullInfo.from_actions.filter((x) => x.nodeType !== "AND").length).to.equal(2);
     expect(fullInfo.following_actions.length).to.equal(2);
   });
-  it("Do action41", { timeout: 5000 }, async () => {
+  let action41_todoid = "";
+  let action42_todoid = "";
+  it("Step 12: Do action41", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(2);
     expect(["action41", "action42"]).to.include(wlist.objs[0].nodeid);
     expect(["action41", "action42"]).to.include(wlist.objs[1].nodeid);
-    let workid_41 = "";
-    if (wlist.objs[0].nodeid === "action41") workid_41 = wlist.objs[0].workid;
-    else workid_41 = wlist.objs[1].workid;
+    if (wlist.objs[0].nodeid === "action41") {
+      action41_todoid = wlist.objs[0].todoid;
+      action42_todoid = wlist.objs[1].todoid;
+    } else {
+      action41_todoid = wlist.objs[1].todoid;
+      action42_todoid = wlist.objs[0].todoid;
+    }
 
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, workid_41);
+    let fullInfo = await SDK.getWorkInfo(wfid, action41_todoid);
     expect(fullInfo.from_actions.length).to.equal(1);
     expect(fullInfo.from_actions[0].nodeid).to.equal("action3");
 
-    let ret = await SDK.doWorkByNode(TEST_USER, wfid, "action41", {
+    let ret = await SDK.doWork(testUsers[0].account, action41_todoid, {
       input_action41: "action41",
     });
-    expect(ret.workid).to.equal(workid_41);
-    ret = await SDK.doWorkByNode(TEST_USER, wfid, "action42");
+    expect(ret.todoid).to.equal(action41_todoid);
+    await SDK.sleep(3000);
+    ret = await SDK.doWork(testUsers[0].account, action42_todoid);
     expect(ret.error).to.equal("WORK_RUNNING_NOT_EXIST");
   });
-  it("Check action5", { timeout: 5000 }, async () => {
+
+  it("Step 13: Check action5", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, {
+    let wlist = await SDK.getWorklist(testUsers[0].account, {
       wfid: wfid,
       nodeid: "action5",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
-    tmpworkid = wlist.objs[0].workid;
+    tmptodoid = wlist.objs[0].todoid;
 
-    let fullInfo = await SDK.getWorkitemFullInfo(wfid, tmpworkid);
-    expect(fullInfo.from_actions).to.have.length(2);
-    expect(fullInfo.from_actions[0].nodeid).to.equal("action41");
+    let fullInfo = await SDK.getWorkInfo(wfid, tmptodoid);
+    expect(fullInfo.from_actions).to.have.length(3);
+    expect(fullInfo.from_actions[1].nodeid).to.equal("action41");
   });
 
-  it("Do action5", { timeout: 5000 }, async () => {
-    let ret = await SDK.doWork(TEST_USER, tmpworkid, {
+  it("Step 14: Do action5", { timeout: 5000 }, async () => {
+    let ret = await SDK.doWork(testUsers[0].account, tmptodoid, {
       input_action5: "action5",
     });
-    expect(ret.workid).to.equal(tmpworkid);
+    expect(ret.todoid).to.equal(tmptodoid);
   });
 
-  it("Check Vars", { timeout: 5000 }, async () => {
+  it("Step 15: Check Vars", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
     let kvs = await SDK.getKVars(wfid);
     expect(kvs["input_action1"].value).to.equal("action1");
@@ -194,14 +311,25 @@ describe("Test: ", () => {
     expect(kvs["input_action5"].value).to.equal("action5");
   });
 
-  it("Should have no workitem now", { timeout: 5000 }, async () => {
+  it("Step 16: Should have no workitem now", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(TEST_USER, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(0);
   });
 
-  it("Check workflow status", async () => {
+  it("Step 17: Check workflow status", async () => {
     let ret = await SDK.getStatus(wfid);
     expect(ret).to.equal("ST_DONE");
+  });
+  */
+  //clearnup tenant;
+  it("cleaning up", async () => {
+    await SDK.sleep(3000);
+    await SDK.destroyWorkflowByTplid("test_and_or");
+    await SDK.deleteTemplateByTplid("test_and_or");
+    await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
+    for (let i = 0; i < testUsers.length; i++) {
+      await SDK.removeUser(testUsers[i].account, SITE_PWD);
+    }
   });
 });

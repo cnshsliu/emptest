@@ -1,80 +1,129 @@
 "use strict";
 
-const Lab = require("@hapi/lab");
+const { describe, it } = require("node:test");
 const { expect } = require("@hapi/code");
-const { afterEach, beforeEach, describe, it } = (exports.lab = Lab.script());
-const SDK = require("metaflow");
+const SDK = require("../app.js");
+const fs = require("fs");
+const SITE_PWD = "site_password_999";
+const SITE_ADMIN = { account: "lucas2", name: "Lucas2", password: "Pwd@123" };
 
-const TEST_USER = process.env.TEST_USER || "liukehong@gmail.com";
-const TEST_PASSWORD = process.env.TEST_PASSWORD || "psammead";
+const TID = "perm";
+const testUsers = [
+  {
+    account: TID + "_" + "test_user_lkh",
+    passwd: "Password@123",
+    name: "UserLKH_" + SDK.randomString(6),
+  },
+  {
+    account: TID + "_" + "test_user_001",
+    passwd: "Password@123",
+    name: "User001_" + SDK.randomString(6),
+  },
+  {
+    account: TID + "_" + "test_user_002",
+    passwd: "Password@123",
+    name: "User002_" + SDK.randomString(6),
+  },
+  {
+    account: TID + "_" + "test_user_003",
+    passwd: "Password@123",
+    name: "User003_" + SDK.randomString(6),
+  },
+  {
+    account: TID + "_" + "test_user_004",
+    passwd: "Password@123",
+    name: "User004_" + SDK.randomString(6),
+  },
+  {
+    account: TID + "_" + "test_user_005",
+    passwd: "Password@123",
+    name: "User005_" + SDK.randomString(6),
+  },
+  {
+    account: TID + "_" + "test_user_006",
+    passwd: "Password@123",
+    name: "User006_" + SDK.randomString(6),
+  },
+];
+
+const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
+
+const TPL_ID = "inform_example";
 
 describe("Test Permission Control: ", () => {
-  beforeEach(async () => {});
-
-  afterEach(async () => {});
-
   let username = "";
   let password = "";
   let email = "";
   let verifyEmailToken = "";
   let res;
   let joincode;
-  SDK.setServer("http://localhost:5008");
+  SDK.setServer("http://emp.localhost:5008");
 
-  it("Register Test Admin Users testu001 if not exist", async () => {
-    password = "Ab@abcd123";
+  it("prepare admin account ", async () => {
     try {
-      res = await SDK.register("testu001", password, "testu001@abcd.com");
-      res = await SDK.verify(res.verifyToken);
+      await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
     } catch (e) {}
-
-    res = await SDK.login("testu001@abcd.com", "Ab@abcd123");
-    res = await SDK.post("/tnt/my/org");
-    if (res.orgmode === false) {
-      console.log("Please set testu001's tenant orgmode to true manually");
+  });
+  it("Step 1: Login", async () => {
+    //清理掉遗留的测试用户
+    try {
+      await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
+      for (let i = 0; i < testUsers.length; i++) {
+        await SDK.removeUser(testUsers[i].account, SITE_PWD);
+      }
+    } finally {
     }
-    expect(res.orgmode).to.be.true();
+    //重新注册所有测试用户
+    for (let i = 0; i < testUsers.length; i++) {
+      await SDK.register(testUsers[i].account, testUsers[i].name, testUsers[i].passwd);
+    }
+    let ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);
+    console.log(ret);
+    let tenant_id = ret.user.tenant._id.toString();
+    expect(ret.user.username).to.not.be.empty();
+    //清理遗留的申请信息
+    await SDK.orgClearJoinApplications();
+    //将当前用户的tenant设为组织
+
+    //将当前用户的tenant设为组织
+    await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
+    ret = await SDK.post("/tnt/set/orgmode", { password: SITE_PWD, tenant_id: tenant_id });
+    expect(ret).to.equal(true);
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
+
+    let joincodeRet = await SDK.orgJoinCodeNew();
+    //申请加入组织
+    for (let i = 1; i < testUsers.length; i++) {
+      await SDK.login(testUsers[i].account, testUsers[i].passwd);
+
+      let ret = await SDK.orgJoin(joincodeRet.joincode);
+      expect(ret.code).to.equal("ok");
+    }
+
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
+    //获得组织全部信息
+    let myorg = await SDK.orgMyOrg();
+
+    //审批测试用户加入申请
+    let accountsToApprove = myorg.joinapps.map((x) => x.account);
+    let leftApps = await SDK.orgApprove(accountsToApprove);
+    //审批后，返回的joinapps应该是空数组
+    expect(leftApps.ret).to.equal("array");
+    expect(leftApps.joinapps).to.be.an.array();
+    expect(leftApps.joinapps).to.be.empty();
+    //取myorg，同样返回的joinapps应该是空数组
+    myorg = await SDK.orgMyOrg();
+    expect(myorg.joinapps).to.be.an.array();
+    expect(myorg.joinapps).to.be.empty();
   });
 
-  it("Register testu002 and testu003", async () => {
-    try {
-      res = await SDK.register("testu002", password, "testu002@abcd.com");
-      res = await SDK.verify(res.verifyToken);
-    } catch (e) {}
-    try {
-      res = await SDK.register("testu003", password, "testu003@abcd.com");
-      res = await SDK.verify(res.verifyToken);
-    } catch (e) {}
-  });
-
-  it("testu001 generate joincode", async () => {
-    res = await SDK.login("testu001@abcd.com", "Ab@abcd123");
-    res = await SDK.orgJoinCodeNew("Ab@abcd123");
-    joincode = res.joincode;
-  });
-
-  it("test002 apply join", async () => {
-    res = await SDK.login("testu002@abcd.com", "Ab@abcd123");
-    res = await SDK.orgJoin(joincode);
-  });
-  it("test003 apply join", async () => {
-    res = await SDK.login("testu003@abcd.com", "Ab@abcd123");
-    res = await SDK.orgJoin(joincode);
-  });
-  it("testu001 approve applications", async () => {
-    res = await SDK.login("testu001@abcd.com", "Ab@abcd123");
-    res = await SDK.orgMyOrg();
-    expect(res.joinapps.length).to.equal(2);
-    res = await SDK.orgApprove("testu002@abcd.com:testu003@abcd.com", "Ab@abcd123");
-    res = await SDK.orgMyOrg();
-    expect(res.joinapps.length).to.equal(0);
-  });
   it("set member's group", async () => {
-    res = await SDK.orgSetMemberGroup("testu002@abcd.com", "Ab@abcd123", "DOER");
-    res = await SDK.orgSetMemberGroup("testu003@abcd.com", "Ab@abcd123", "OBSERVER");
+    res = await SDK.orgSetEmployeeGroup([testUsers[1].account], "DOER");
+    res = await SDK.orgSetEmployeeGroup([testUsers[2].account], "OBSERVER");
   });
   it("check admin's perm", async () => {
     res = await SDK.myPerm("template", "create");
+    console.log(res);
     expect(res).to.be.true();
     res = await SDK.myPerm("template", "read");
     expect(res).to.be.true();
@@ -112,44 +161,96 @@ describe("Test Permission Control: ", () => {
   });
 
   it("check DOER's perm", async () => {
-    res = await SDK.memberPerm("testu002@abcd.com", "template", "create");
+    res = await SDK.employeePerm(testUsers[1].account, "template", "create");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "template", "read");
+    res = await SDK.employeePerm(testUsers[1].account, "template", "read");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "template", "update");
+    res = await SDK.employeePerm(testUsers[1].account, "template", "update");
     expect(res).to.be.false();
-    res = await SDK.memberPerm("testu002@abcd.com", "template", "delete");
-    expect(res).to.be.false();
-
-    res = await SDK.memberPerm("testu002@abcd.com", "workflow", "create");
-    expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "workflow", "read");
-    expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "workflow", "update");
-    expect(res).to.be.false();
-    res = await SDK.memberPerm("testu002@abcd.com", "workflow", "delete");
+    res = await SDK.employeePerm(testUsers[1].account, "template", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.memberPerm("testu002@abcd.com", "work", "create");
+    res = await SDK.employeePerm(testUsers[1].account, "workflow", "create");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "work", "read");
+    res = await SDK.employeePerm(testUsers[1].account, "workflow", "read");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "work", "update");
+    res = await SDK.employeePerm(testUsers[1].account, "workflow", "update");
     expect(res).to.be.false();
-    res = await SDK.memberPerm("testu002@abcd.com", "work", "delete");
+    res = await SDK.employeePerm(testUsers[1].account, "workflow", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.memberPerm("testu002@abcd.com", "team", "create");
+    res = await SDK.employeePerm(testUsers[1].account, "work", "create");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "team", "read");
+    res = await SDK.employeePerm(testUsers[1].account, "work", "read");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "team", "update");
+    res = await SDK.employeePerm(testUsers[1].account, "work", "update");
     expect(res).to.be.false();
-    res = await SDK.memberPerm("testu002@abcd.com", "team", "delete");
+    res = await SDK.employeePerm(testUsers[1].account, "work", "delete");
     expect(res).to.be.false();
-    res = await SDK.memberPerm("testu001@abcd.com", "*", "admin");
+
+    res = await SDK.employeePerm(testUsers[1].account, "team", "create");
     expect(res).to.be.true();
-    res = await SDK.memberPerm("testu002@abcd.com", "*", "admin");
+    res = await SDK.employeePerm(testUsers[1].account, "team", "read");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(testUsers[1].account, "team", "update");
     expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[1].account, "team", "delete");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[1].account, "*", "admin");
+    expect(res).to.be.false();
+  });
+  it("check ADMIN's perm", async () => {
+    res = await SDK.employeePerm(testUsers[0].account, "*", "admin");
+    expect(res).to.be.true();
+  });
+  it("check OBSERVER's perm", async () => {
+    res = await SDK.employeePerm(testUsers[2].account, "template", "create");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "template", "read");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(testUsers[2].account, "template", "update");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "template", "delete");
+    expect(res).to.be.false();
+
+    res = await SDK.employeePerm(testUsers[2].account, "workflow", "create");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "workflow", "read");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(testUsers[2].account, "workflow", "update");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "workflow", "delete");
+    expect(res).to.be.false();
+
+    res = await SDK.employeePerm(testUsers[2].account, "work", "create");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "work", "read");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(testUsers[2].account, "work", "update");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "work", "delete");
+    expect(res).to.be.false();
+
+    res = await SDK.employeePerm(testUsers[2].account, "team", "create");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "team", "read");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(testUsers[2].account, "team", "update");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "team", "delete");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(testUsers[2].account, "*", "admin");
+    expect(res).to.be.false();
+  });
+
+  it("cleaning up", async () => {
+    await SDK.sleep(3000);
+    await SDK.destroyWorkflowByTplid("test_and_or");
+    await SDK.deleteTemplateByTplid("test_and_or");
+    await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
+    for (let i = 1; i < testUsers.length; i++) {
+      await SDK.removeUser(testUsers[i].account, SITE_PWD);
+    }
+    await SDK.removeUser(testUsers[0].account, SITE_PWD);
   });
 });
