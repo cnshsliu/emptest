@@ -186,16 +186,15 @@ describe("Test: ", {timeout: 5000}, () => {
   });
 
   it("Step7", async () => {
-    await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [{ eid: testUsers[1].account }]);
+    // const del = await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [{ eid: testUsers[1].account }]);
+    const del = await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [testUsers[1].account]);
     let ret = await SDK.getTeamFullInfo(teamid);
+    console.log(del)
     console.log('-------')
     console.log(ret.tmap.TEAM_LEADER)
     expect(ret.tmap.TEAM_LEADER.length).to.equal(2);
     expect(ret.tmap.TEAM_LEADER[1].cn).to.equal(testUsers[3].name);
-    await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [
-      { eid: testUsers[2].account },
-      { eid: testUsers[3].account },
-    ]);
+    await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [testUsers[2].account, testUsers[3].account]);
     ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.TEAM_LEADER.length).to.equal(0);
   });

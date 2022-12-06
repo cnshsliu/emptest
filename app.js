@@ -451,7 +451,7 @@ const HyperAutomation = {
     return ret;
   },
   deleteRoleMembers: async function (teamid, role, members) {
-    let payload = { teamid: teamid, role: role, members: members };
+    let payload = { teamid: teamid, role: role, eids: members };
     let ret = await HyperAutomation.post("/team/role/member/delete", payload);
     return ret;
   },
