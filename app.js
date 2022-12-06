@@ -697,6 +697,59 @@ const HyperAutomation = {
     });
     return ret;
   },
+  // 组织
+  addOrgchart: async function (param) {
+    let ret = await HyperAutomation.post("/orgchart/add", param);
+    return ret;
+  },
+  expandOrgchart: async function (param) {
+    let ret = await HyperAutomation.post("orgchart/expand", param);
+    return ret;
+  },
+  addPosToOrgUser: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/addpos", param);
+    return ret
+  },
+  getAllousFromOrgchart: async function(param = {}) {
+    let ret = await HyperAutomation.post("orgchart/allous", param);
+    return ret
+  },
+  delPosFromOrgUser: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/check/is/authorized/admin", param);
+    return ret
+  },
+  copyOrMoveStaff: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/copyormovestaff", param);
+    return ret
+  },
+  delPos: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/delpos", param);
+    return ret
+  },
+  exportOrgchart: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/export", param);
+    return ret
+  },
+  getLeaderWithinOrgchart: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/getleader", param);
+    return ret
+  },
+  getStaffWithinOrgchart: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/getstaff", param);
+    return ret
+  },
+  importFromExcel: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/import/excel", param);
+    return ret
+  },
+  listOrgchart: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/list", param);
+    return ret
+  },
+  listOrgchartOU: async function(param) {
+    let ret = await HyperAutomation.post("orgchart/listou", param);
+    return ret
+  }
 };
 
 module.exports = HyperAutomation;

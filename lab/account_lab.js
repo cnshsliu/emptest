@@ -9,7 +9,7 @@ const fs = require("fs");
 const SITE_PWD = "site_password_999";
 const SITE_ADMIN = { account: "lucas2", name: "Lucas2", password: "Pwd@123" };
 
-SDK.setServer("http://emp.localhost:5008");
+// SDK.setServer("http://emp.localhost:5008");
 
 const testUsers = [
   {
@@ -49,6 +49,7 @@ const testUsers = [
   },
 ];
 describe("Test: ", () => {
+  SDK.setServer("https://emp.localhost");
   it("prepare admin account ", async () => {
     try {
       await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
