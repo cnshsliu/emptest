@@ -8,7 +8,6 @@ const { after, before, describe, it } = (exports.lab = Lab.script({
   },
 }));
 const SDK = require("../app.js");
-const Common = require("../common.js");
 const fs = require("fs");
 const SITE_PWD = "site_password_999";
 const SITE_ADMIN = { account: "lucas2", name: "Lucas2", password: "Pwd@123" };
