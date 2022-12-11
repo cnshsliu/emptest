@@ -70,6 +70,7 @@ const HyperAutomation = {
   },
 
   post: async function (uri, payload) {
+    payload = payload ?? {};
     if (HyperAutomation.axiosOptions.debug) console.log("post", uri, payload);
     let ret = await HyperAutomation._post(uri, payload);
     return ret?.data;
@@ -672,16 +673,16 @@ const HyperAutomation = {
     });
     return ret;
   },
-  orgApprove: async function (accounts) {
-    let ret = await HyperAutomation.post("/tnt/approve", { accounts: accounts });
+  orgApprove: async function (account_eids) {
+    let ret = await HyperAutomation.post("/tnt/approve", { account_eids: account_eids });
     return ret;
   },
   orgSetEmployeeGroup: async function (eids, group) {
     let ret = await HyperAutomation.post("/tnt/employee/setgroup", { eids, group });
     return ret;
   },
-  orgGetEmployees: async function (eids) {
-    let ret = await HyperAutomation.post("/tnt/employees", { eids });
+  orgGetEmployees: async function (payload) {
+    let ret = await HyperAutomation.post("/tnt/employees", payload);
     return ret;
   },
   myPerm: async function (what, op, instance_id = undefined) {
@@ -698,38 +699,6 @@ const HyperAutomation = {
     return ret;
   },
   // 组织
-  addOrgchart: async function (param) {
-    let ret = await HyperAutomation.post("/orgchart/add", param);
-    return ret;
-  },
-  expandOrgchart: async function (param) {
-    let ret = await HyperAutomation.post("orgchart/expand", param);
-    return ret;
-  },
-  addPosToOrgUser: async function (param) {
-    let ret = await HyperAutomation.post("orgchart/addpos", param);
-    return ret;
-  },
-  getAllousFromOrgchart: async function (param = {}) {
-    let ret = await HyperAutomation.post("orgchart/allous", param);
-    return ret;
-  },
-  delPosFromOrgUser: async function (param) {
-    let ret = await HyperAutomation.post("orgchart/check/is/authorized/admin", param);
-    return ret;
-  },
-  copyOrMoveStaff: async function (param) {
-    let ret = await HyperAutomation.post("orgchart/copyormovestaff", param);
-    return ret;
-  },
-  delPos: async function (param) {
-    let ret = await HyperAutomation.post("orgchart/delpos", param);
-    return ret;
-  },
-  exportOrgchart: async function (param) {
-    let ret = await HyperAutomation.post("orgchart/export", param);
-    return ret;
-  },
   getLeaderWithinOrgchart: async function (param) {
     let ret = await HyperAutomation.post("orgchart/getleader", param);
     return ret;

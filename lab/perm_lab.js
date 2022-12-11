@@ -52,7 +52,7 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "inform_example";
 
-describe("Test Permission Control: ", {timeout: 5000}, () => {
+describe("Test Permission Control: ", { timeout: 5000 }, () => {
   let username = "";
   let password = "";
   let email = "";
@@ -67,7 +67,8 @@ describe("Test Permission Control: ", {timeout: 5000}, () => {
       await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
     } catch (e) {}
   });
-  it("Step 1: Login", async () => {
+
+  it("Step 1: Prepare test account", async () => {
     //清理掉遗留的测试用户
     try {
       await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
@@ -81,7 +82,6 @@ describe("Test Permission Control: ", {timeout: 5000}, () => {
       await SDK.register(testUsers[i].account, testUsers[i].name, testUsers[i].passwd);
     }
     let ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);
-    console.log(ret);
     let tenant_id = ret.user.tenant._id.toString();
     expect(ret.user.username).to.not.be.empty();
     //清理遗留的申请信息
@@ -98,28 +98,39 @@ describe("Test Permission Control: ", {timeout: 5000}, () => {
     //申请加入组织
     for (let i = 1; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
-
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
     }
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    let myorg = await SDK.orgMyOrg();
+    // console.log(myorg);
+    let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
+    console.log(employees);
+    expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
+    let myorg = await SDK.orgMyOrg();
     let accountsToApprove = myorg.joinapps.map((x) => x.account);
-    let leftApps = await SDK.orgApprove(accountsToApprove);
+    let account_eids = accountsToApprove.map((x) => {
+      return {
+        account: x,
+        eid: x + "_eid",
+      };
+    });
+    let leftApps = await SDK.orgApprove(account_eids);
     //审批后，返回的joinapps应该是空数组
     expect(leftApps.ret).to.equal("array");
     expect(leftApps.joinapps).to.be.an.array();
     expect(leftApps.joinapps).to.be.empty();
+    employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
+    expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
+    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
-
   it("set member's group", async () => {
     res = await SDK.orgSetEmployeeGroup([testUsers[1].account], "DOER");
     res = await SDK.orgSetEmployeeGroup([testUsers[2].account], "OBSERVER");
