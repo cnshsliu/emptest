@@ -52,6 +52,12 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "inform_example";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let tmpworkid = "";
@@ -91,7 +97,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -143,7 +149,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("Do action1 to trigger inform", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let ret = await SDK.getWorklist(testUsers[0].account, {
+    let ret = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "action1",
       status: "ST_RUN",
@@ -151,17 +157,17 @@ describe("Test: ", { timeout: 5000 }, () => {
     console.log(ret);
     expect(ret.total).to.equal(1);
 
-    ret = await SDK.doWork(testUsers[0].account, ret.objs[0].todoid);
+    ret = await SDK.doWork(getEid(0), ret.objs[0].todoid);
     action1_todoid = ret.todoid;
     //action1 --->  inform1  ---sleep----> action2
   });
 
   it("Do action2", { timeout: 5000 }, async () => {
     await SDK.sleep(2000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, 10, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), 10, { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action2");
-    await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid);
+    await SDK.doWork(getEid(0), wlist.objs[0].todoid);
   });
 
   it("Check workflow status", async () => {

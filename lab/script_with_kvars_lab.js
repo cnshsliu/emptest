@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let childwfid = "";
@@ -91,7 +97,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -141,7 +147,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("1> Do action1", { timeout: 60000 }, async () => {
     //get worklist
     await SDK.sleep(200);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action1");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1");
   });
 
   it("1> Check vars", { timeout: 60000 }, async () => {
@@ -155,12 +161,12 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("1> Check actionYES", { timeout: 60000 }, async () => {
     await SDK.sleep(200);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("actionYES");
     await SDK.sleep(200);
     let actionYES_todoid = wlist.objs[0].todoid;
-    let tmp = await SDK.doWork(testUsers[0].account, actionYES_todoid);
+    let tmp = await SDK.doWork(getEid(0), actionYES_todoid);
     expect(tmp.todoid).to.equal(actionYES_todoid);
     await SDK.sleep(200);
 

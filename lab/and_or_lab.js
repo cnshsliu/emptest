@@ -48,6 +48,12 @@ const testUsers = [
 ];
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test and_or logic", { timeout: 5000 }, () => {
   SDK.setServer("https://emp.localhost");
   let wfid = "lkh_" + SDK.guid();
@@ -89,7 +95,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -99,7 +105,6 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
     //获得组织全部信息
     // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -124,7 +129,6 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
-  /*
   it("Step 2: Upload template", async () => {
     const ret = await SDK.putTemplate(
       fs.readFileSync(TEST_TEMPLATE_DIR + "/test_and_or.xml", "utf8"),
@@ -136,6 +140,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   });
 
   it("Step 3: Start Workflow", async () => {
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
     const pbo = "http://www.google.com";
     const ret = await SDK.startWorkflow("test_and_or", wfid, "", pbo);
     expect(ret.wfid).to.equal(wfid);
@@ -160,7 +165,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   it("Step 5: Do action1", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(1000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "action1",
       status: "ST_RUN",
@@ -171,7 +176,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
     // let fullInfo = await SDK.getWorkInfo(wfid, wlist.objs[0].todoid);
     // expect(fullInfo.from_action_todoid).to.be.undefined();
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       input_action1: "action1",
     });
     expect(ret.todoid).to.equal(wlist.objs[0].todoid);
@@ -183,7 +188,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   let action22_todoid = "";
   it("Step 6: Check worklist after action1", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    wlist = await SDK.getWorklist(testUsers[0].account, {
+    wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       status: "ST_RUN",
     });
@@ -208,7 +213,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   });
 
   it("Step 7: Do action21", async () => {
-    let ret = await SDK.doWork(testUsers[0].account, action21_todoid, {
+    let ret = await SDK.doWork(getEid(0), action21_todoid, {
       input_action21: "action21",
     });
     expect(ret.todoid).to.be.a.string();
@@ -219,7 +224,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
 
   it("Step 8: Check worklist after action21", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action22");
     let fullInfo = await SDK.getWorkInfo(wfid, action21_todoid);
@@ -227,7 +232,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   });
 
   it("Step 9: Do action22", async () => {
-    let ret = await SDK.doWork(testUsers[0].account, action22_todoid, {
+    let ret = await SDK.doWork(getEid(0), action22_todoid, {
       input_action22: "action22",
     });
     expect(ret.todoid).to.be.a.string();
@@ -235,7 +240,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   let action3_todoid = "";
   it("Step 10: Check worklist after action 22 -> AND", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action3");
     action3_todoid = wlist.objs[0].todoid;
@@ -250,7 +255,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   });
 
   it("Step 11: Do action3", async () => {
-    let ret = await SDK.doWork(testUsers[0].account, action3_todoid, {
+    let ret = await SDK.doWork(getEid(0), action3_todoid, {
       input_action3: "action3",
     });
     let todoid = ret.todoid;
@@ -265,7 +270,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   let action42_todoid = "";
   it("Step 12: Do action41", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(2);
     expect(["action41", "action42"]).to.include(wlist.objs[0].nodeid);
     expect(["action41", "action42"]).to.include(wlist.objs[1].nodeid);
@@ -281,18 +286,18 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
     expect(fullInfo.from_actions.length).to.equal(1);
     expect(fullInfo.from_actions[0].nodeid).to.equal("action3");
 
-    let ret = await SDK.doWork(testUsers[0].account, action41_todoid, {
+    let ret = await SDK.doWork(getEid(0), action41_todoid, {
       input_action41: "action41",
     });
     expect(ret.todoid).to.equal(action41_todoid);
     await SDK.sleep(3000);
-    ret = await SDK.doWork(testUsers[0].account, action42_todoid);
+    ret = await SDK.doWork(getEid(0), action42_todoid);
     expect(ret.error).to.equal("WORK_RUNNING_NOT_EXIST");
   });
 
   it("Step 13: Check action5", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "action5",
       status: "ST_RUN",
@@ -306,7 +311,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
   });
 
   it("Step 14: Do action5", { timeout: 5000 }, async () => {
-    let ret = await SDK.doWork(testUsers[0].account, tmptodoid, {
+    let ret = await SDK.doWork(getEid(0), tmptodoid, {
       input_action5: "action5",
     });
     expect(ret.todoid).to.equal(tmptodoid);
@@ -325,7 +330,7 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
 
   it("Step 16: Should have no workitem now", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(0);
   });
 
@@ -333,7 +338,6 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
     let ret = await SDK.getStatus(wfid);
     expect(ret).to.equal("ST_DONE");
   });
-  */
   //clearnup tenant;
   it("cleaning up", async () => {
     await SDK.sleep(3000);

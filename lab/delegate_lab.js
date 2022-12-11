@@ -53,6 +53,12 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "simple_leave_application";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test Delegation: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let username = "";
@@ -97,7 +103,7 @@ describe("Test Delegation: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -133,11 +139,11 @@ describe("Test Delegation: ", { timeout: 5000 }, () => {
     expect(myorg.joinapps).to.be.empty();
   });
   it("set member's group", async () => {
-    res = await SDK.orgSetEmployeeGroup([testUsers[1].account], "DOER");
-    res = await SDK.orgSetEmployeeGroup([testUsers[2].account], "DOER");
-    res = await SDK.orgGetEmployees([testUsers[1].account]);
+    res = await SDK.orgSetEmployeeGroup([getEid(1)], "DOER");
+    res = await SDK.orgSetEmployeeGroup([getEid(2)], "DOER");
+    res = await SDK.orgGetEmployees({ eids: [getEid(1)] });
     expect(res[0].group).to.equal("DOER");
-    res = await SDK.orgGetEmployees([testUsers[2].account]);
+    res = await SDK.orgGetEmployees({ eids: [getEid(2)] });
     expect(res[0].group).to.equal("DOER");
   });
   it("test delegation", async () => {
@@ -149,22 +155,22 @@ describe("Test Delegation: ", { timeout: 5000 }, () => {
     expect(res.tplid).to.equal(TPL_ID);
     res = await SDK.startWorkflow(TPL_ID, wfid);
     await SDK.sleep(1000);
-    res = await SDK.getWorklist(testUsers[1].account, 10);
+    res = await SDK.getWorklist(getEid(1), 10);
     expect(res.total).to.be.greaterThan(0);
-    expect(res.objs[0].doer).to.equal(testUsers[1].account);
+    expect(res.objs[0].doer).to.equal(getEid(1));
 
     wfid = "lkh_" + SDK.guid();
     res = await SDK.login(testUsers[2].account, testUsers[2].passwd);
     res = await SDK.startWorkflow(TPL_ID, wfid);
     await SDK.sleep(1000);
-    res = await SDK.getWorklist(testUsers[2].account, 10);
+    res = await SDK.getWorklist(getEid(2), 10);
     let no_of_user_2 = res.total;
     expect(res.total).to.be.greaterThan(0);
-    expect(res.objs[0].doer).to.equal(testUsers[2].account);
+    expect(res.objs[0].doer).to.equal(getEid(2));
 
     ////   user  1     delegate  to  user   2
     res = await SDK.login(testUsers[1].account, testUsers[1].passwd);
-    res = await SDK.getWorklist(testUsers[1].account, 10);
+    res = await SDK.getWorklist(getEid(1), 10);
     let no_of_user_1 = res.total;
     let today = new Date();
     let begindate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
@@ -174,7 +180,7 @@ describe("Test Delegation: ", { timeout: 5000 }, () => {
     begindate = new moment().format("YYYY-MM-DD");
     enddate = new moment().add(3, "days").format("YYYY-MM-DD");
     res = await SDK.post("delegate", {
-      delegatee: testUsers[2].account,
+      delegatee: getEid(2),
       begindate: begindate,
       enddate: enddate,
     });
@@ -190,7 +196,7 @@ describe("Test Delegation: ", { timeout: 5000 }, () => {
     expect(number_of_delegation_to_me).to.equal(1);
     expect(number_of_delegation_to_me_today).to.equal(1);
     expect(number_of_delegation_to_me >= number_of_delegation_to_me_today).to.be.true();
-    res = await SDK.getWorklist(testUsers[2].account, 10, { debug: false });
+    res = await SDK.getWorklist(getEid(2), 10, { debug: false });
     let no_of_user_2_all = res.total;
     expect(res.total > 0).to.be.true();
 
@@ -202,7 +208,7 @@ describe("Test Delegation: ", { timeout: 5000 }, () => {
 
     //// user   2   should have no work now
     res = await SDK.login(testUsers[2].account, testUsers[2].passwd);
-    res = await SDK.getWorklist(testUsers[2].account, 10);
+    res = await SDK.getWorklist(getEid(2), 10);
     res = await SDK.post("delegation/to/me");
     ids = res.map((x) => x._id);
     expect(ids.length).to.equal(0);

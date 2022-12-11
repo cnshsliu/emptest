@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Simple leave application with roles ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   SDK.setServer("http://emp.localhost");
@@ -89,7 +95,7 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -138,14 +144,14 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
 
   it("Configure team", async () => {
     let teamMap = {
-      LEADER: [{ eid: testUsers[0].account, cn: "leader1" }],
+      LEADER: [{ eid: getEid(0), cn: "leader1" }],
       MANAGER: [
-        { eid: testUsers[1].account, cn: "manager1" },
-        { eid: testUsers[2].account, cn: "manager2" },
+        { eid: getEid(1), cn: "manager1" },
+        { eid: getEid(2), cn: "manager2" },
       ],
       DIRECTOR: [
-        { eid: testUsers[3].account, cn: "director1" },
-        { eid: testUsers[4].account, cn: "director2" },
+        { eid: getEid(3), cn: "director1" },
+        { eid: getEid(4), cn: "director2" },
       ],
     };
     let ret = await SDK.uploadTeam("simple_leave_team", teamMap);
@@ -156,7 +162,7 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
   it("Do apply", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "apply",
       status: "ST_RUN",
@@ -164,7 +170,7 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("start");
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       days: leave_days,
       reason: "Go hospital",
       extra: "Thank you",
@@ -178,7 +184,7 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
     expect(allvars["days"].value).to.equal(leave_days);
     expect(allvars["reason"].value).to.equal("Go hospital");
     expect(allvars["extra"].value).to.equal("Thank you");
-    let wlist = await SDK.getWorklist(testUsers[4].account, {
+    let wlist = await SDK.getWorklist(getEid(4), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
@@ -188,7 +194,7 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
 
   it("Do approve_by_leader", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "approve_by_leader",
       status: "ST_RUN",
@@ -196,34 +202,34 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("apply");
     //the LEADER participant
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {}, "approve");
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {}, "approve");
     expect(ret.todoid).to.equal(wlist.objs[0].todoid);
   });
 
   it("Do approve_by_director ", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    let wlist = await SDK.getWorklist(testUsers[3].account, {
+    let wlist = await SDK.getWorklist(getEid(3), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
-    wlist = await SDK.getWorklist(testUsers[4].account, {
+    wlist = await SDK.getWorklist(getEid(4), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
-    await SDK.doWorkByNode(testUsers[3].account, wfid, "approve_by_director", {
+    await SDK.doWorkByNode(getEid(3), wfid, "approve_by_director", {
       days: 3,
     });
-    wlist = await SDK.getWorklist(testUsers[3].account, {
+    wlist = await SDK.getWorklist(getEid(3), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(0);
-    wlist = await SDK.getWorklist(testUsers[4].account, {
+    wlist = await SDK.getWorklist(getEid(4), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
@@ -233,34 +239,34 @@ describe("Simple leave application with roles ", { timeout: 5000 }, () => {
 
   it("Do approve_by_director2 ", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    let wlist = await SDK.getWorklist(testUsers[3].account, {
+    let wlist = await SDK.getWorklist(getEid(3), {
       wfid: wfid,
       nodeid: "approve_by_director2",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
-    wlist = await SDK.getWorklist(testUsers[4].account, {
+    wlist = await SDK.getWorklist(getEid(4), {
       wfid: wfid,
       nodeid: "approve_by_director2",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
-    await SDK.doWorkByNode(testUsers[3].account, wfid, "approve_by_director2", {
+    await SDK.doWorkByNode(getEid(3), wfid, "approve_by_director2", {
       days: 3,
     });
-    wlist = await SDK.getWorklist(testUsers[3].account, {
+    wlist = await SDK.getWorklist(getEid(3), {
       wfid: wfid,
       nodeid: "approve_by_director2",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(0);
-    wlist = await SDK.getWorklist(testUsers[4].account, {
+    wlist = await SDK.getWorklist(getEid(4), {
       wfid: wfid,
       nodeid: "approve_by_director2",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
-    await SDK.doWorkByNode(testUsers[4].account, wfid, "approve_by_director2", {
+    await SDK.doWorkByNode(getEid(4), wfid, "approve_by_director2", {
       days: 6,
     });
   });

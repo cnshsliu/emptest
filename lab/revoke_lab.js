@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test Revoke: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let tmpworkid = "";
@@ -91,7 +97,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -155,7 +161,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
   it("Do action1", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "action1",
       status: "ST_RUN",
@@ -165,7 +171,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
     // let fullInfo = await SDK.getWorkInfo(wfid, wlist.objs[0].workid);
     // expect(fullInfo.from_action_workid).to.be.undefined();
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       input_action1: "action1",
     });
     console.log(ret);
@@ -175,7 +181,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
 
   it("Check worklistafter action1", { timeout: 600000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(2);
     expect(["action21", "action22"]).to.include(wlist.objs[0].nodeid);
     expect(["action21", "action22"]).to.include(wlist.objs[1].nodeid);
@@ -193,7 +199,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
   it("Revoke DONEed action1", async () => {
     let ret = await SDK.revoke(wfid, action1_todoid);
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.include("action1");
     action1_todoid = wlist.objs[0].todoid;
@@ -202,10 +208,10 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
   it("Fast forward to action3", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let ret = await SDK.doWork(testUsers[0].account, action1_todoid);
+    let ret = await SDK.doWork(getEid(0), action1_todoid);
     //action1_todoid = ret.workid;
     await SDK.sleep(1000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(2);
     if (wlist.objs[0].nodeid === "action21") {
       action21_todoid = wlist.objs[0].todoid;
@@ -215,9 +221,9 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
       action22_todoid = wlist.objs[0].todoid;
     }
     await SDK.sleep(500);
-    await SDK.doWork(testUsers[0].account, action21_todoid);
+    await SDK.doWork(getEid(0), action21_todoid);
     await SDK.sleep(500);
-    await SDK.doWork(testUsers[0].account, action22_todoid);
+    await SDK.doWork(getEid(0), action22_todoid);
   });
 
   it("Revoke action1 should fail", async () => {
@@ -228,18 +234,18 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
     await SDK.sleep(200);
     let action3_todoid = "";
     // 完成action3
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action3");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action3");
     action3_todoid = ret.todoid;
     await SDK.sleep(200);
     // 完成 action3后，后面应该有两个todo
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(2);
     // 撤回 action3
     ret = await SDK.revoke(wfid, action3_todoid);
     expect(ret).to.equal(action3_todoid);
     await SDK.sleep(200);
     // 此时， 工作任务应该就是回到了action3一项
-    wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action3");
     await SDK.sleep(200);
@@ -247,7 +253,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
     ret = await SDK.revoke(wfid, wlist.objs[0].todoid);
     expect(ret.error).to.equals("WORK_NOT_REVOCABLE");
     await SDK.sleep(200);
-    ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action3");
+    ret = await SDK.doWorkByNode(getEid(0), wfid, "action3");
     // 把这个action3完成
     await SDK.sleep(200);
     await SDK.post("/print/log", { msg: "--------after action3--------" });
@@ -255,11 +261,11 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
   it("Complete following actions", { timeout: 10000 }, async () => {
     try {
       await SDK.sleep(500);
-      await SDK.doWorkByNode(testUsers[0].account, wfid, "action41");
+      await SDK.doWorkByNode(getEid(0), wfid, "action41");
     } catch (error) {}
     try {
       await SDK.sleep(500);
-      await SDK.doWorkByNode(testUsers[0].account, wfid, "action5");
+      await SDK.doWorkByNode(getEid(0), wfid, "action5");
     } catch (error) {}
     await SDK.sleep(500);
     expect(await SDK.getStatus(wfid)).to.equal("ST_DONE");

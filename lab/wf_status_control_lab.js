@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let wfid2 = "lkh_" + SDK.guid();
@@ -90,7 +96,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -141,7 +147,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("Do action1", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let tmp = await SDK.getWorklist(testUsers[0].account, {
+    let tmp = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "action1",
       status: "ST_RUN",
@@ -152,7 +158,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     // let fullInfo = await SDK.getWorkInfo(wfid, tmp.objs[0].todoid);
     // expect(fullInfo.from_action_todoid).to.be.undefined();
 
-    let ret = await SDK.doWork(testUsers[0].account, tmp.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), tmp.objs[0].todoid, {
       input_action1: "action1",
     });
     expect(ret.todoid).to.equal(tmp.objs[0].todoid);
@@ -161,7 +167,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("Check worklistafter action1", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let tmp = await SDK.getWorklist(testUsers[0].account, {
+    let tmp = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       status: "ST_RUN",
       wfstatus: "ST_RUN",
@@ -184,7 +190,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(await SDK.getStatus(wfid)).to.equal("ST_RUN");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -197,7 +203,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(ret.status).to.equal("ST_PAUSE");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -207,7 +213,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect((await SDK.resumeWorkflow(wfid)).status).to.equal("ST_RUN");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -222,7 +228,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect((await SDK.resumeWorkflow(wfid)).status).to.equal("ST_STOP");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -237,13 +243,13 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("2>Do until action41/42", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    await SDK.doWorkByNode(testUsers[0].account, wfid2, "action1");
+    await SDK.doWorkByNode(getEid(0), wfid2, "action1");
     await SDK.sleep(500);
-    await SDK.doWorkByNode(testUsers[0].account, wfid2, "action21");
+    await SDK.doWorkByNode(getEid(0), wfid2, "action21");
     await SDK.sleep(500);
-    await SDK.doWorkByNode(testUsers[0].account, wfid2, "action22");
+    await SDK.doWorkByNode(getEid(0), wfid2, "action22");
     await SDK.sleep(500);
-    await SDK.doWorkByNode(testUsers[0].account, wfid2, "action3");
+    await SDK.doWorkByNode(getEid(0), wfid2, "action3");
   });
 
   it("2>Pause/Resume workflow", { timeout: 5000 }, async () => {
@@ -251,7 +257,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(await SDK.getStatus(wfid2)).to.equal("ST_RUN");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid2,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -261,7 +267,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect((await SDK.pauseWorkflow(wfid2)).status).to.equal("ST_PAUSE");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid2,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -271,7 +277,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect((await SDK.resumeWorkflow(wfid2)).status).to.equal("ST_RUN");
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid2,
           status: "ST_RUN",
           wfstatus: "ST_RUN",
@@ -282,16 +288,16 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("2>Do action42 - action5", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    await SDK.doWorkByNode(testUsers[0].account, wfid2, "action42");
+    await SDK.doWorkByNode(getEid(0), wfid2, "action42");
     await SDK.sleep(500);
-    await SDK.doWorkByNode(testUsers[0].account, wfid2, "action5");
+    await SDK.doWorkByNode(getEid(0), wfid2, "action5");
   });
 
   it("Should have no workitem now", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
     expect(
       (
-        await SDK.getWorklist(testUsers[0].account, {
+        await SDK.getWorklist(getEid(0), {
           wfid: wfid2,
           status: "ST_RUN",
           wfstatus: "ST_RUN",

@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let tmpworkid = "";
@@ -90,7 +96,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -141,7 +147,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("1> Do action1", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "action1",
       status: "ST_RUN",
@@ -151,7 +157,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     console.log(fullInfo);
     expect(fullInfo.from_actions).to.have.length(0);
     todoid_action1_round_1 = wlist.objs[0].todoid;
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       days: 10,
     });
     //days > 5 , 将导致脚本运行返回值为to_action2
@@ -161,14 +167,14 @@ describe("Test: ", { timeout: 5000 }, () => {
   let todoid_action2_round_1 = "";
   it("1> Do action2", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action2");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action2");
     expect(ret.todoid).to.be.a.string();
     todoid_action2_round_1 = ret.todoid;
   });
 
   it("1> Check worklist", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action3");
     let fullInfo = await SDK.getWorkInfo(wfid, todoid_action2_round_1);
@@ -180,13 +186,13 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
   it("1> Do action3", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action3");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action3");
     expect(ret.todoid).to.be.a.string();
   });
   let workid_action1_round_2 = "";
   it("2> Do action1", { timeout: 50000 }, async () => {
     await SDK.sleep(1000);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action1", {
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1", {
       days: 8,
     });
     console.log(ret);
@@ -199,7 +205,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   let workid_action2_round_2 = "";
   it("2> Do action2", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action2");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action2");
     expect(ret.workid).to.be.a.string();
     let workid = ret.workid;
     workid_action2_round_2 = workid;
@@ -211,20 +217,20 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
   it("2> Check worklist", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action3");
   });
   it("2> Do action3", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action3");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action3");
     console.log(ret);
     expect(ret.nodeid).to.equal("action3");
     expect(ret.status).to.equal("ST_DONE");
   });
   it("3> Do action1", { timeout: 5000 }, async () => {
-    await SDK.getWorklist(testUsers[0].account, 10);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action1", {
+    await SDK.getWorklist(getEid(0), 10);
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1", {
       days: 3,
     });
     console.log(ret);
@@ -235,7 +241,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   //days小于3， 直接到  end
   it("Check worklist 2", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(0);
   });
 

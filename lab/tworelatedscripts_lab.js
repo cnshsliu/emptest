@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Tones load: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   SDK.setServer("http://emp.localhost");
@@ -90,7 +96,7 @@ describe("Tones load: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -141,12 +147,12 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   it("get first activity ", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(1000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     console.log(wlist);
     expect(wlist.total > 0).to.be.true();
     expect(wlist.objs[0].title).to.equal("Activity");
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       alpharray: { value: ["A", "B", "C", "D"], label: "test_array" },
     });
     expect(ret.todoid).to.equal(wlist.objs[0].todoid);
@@ -155,16 +161,16 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   let ret;
   it("test2", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
-    ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 10);
+    ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 10);
     expect(ret.objs[0].title).to.equal("AAA");
     let allvars = await SDK.getKVars(wfid);
     expect(allvars["reason"].value).to.equal("AAA");
-    await SDK.doWork(testUsers[0].account, ret.objs[0].todoid);
+    await SDK.doWork(getEid(0), ret.objs[0].todoid);
   });
 
   it("Should have no workitem now", { timeout: 10000 }, async () => {
     await SDK.sleep(1000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 3);
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 3);
     console.log(wlist);
     expect(wlist.total).to.equal(0);
   });

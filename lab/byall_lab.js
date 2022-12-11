@@ -23,6 +23,12 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "my_byall";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("byall", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let tmp1, tmp2;
@@ -62,7 +68,7 @@ describe("byall", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -108,8 +114,8 @@ describe("byall", { timeout: 5000 }, () => {
   it("Configure byall team", async () => {
     let teamMap = {
       alldoers: [
-        { eid: testUsers[1].account, cn: "manager1" },
-        { eid: testUsers[2].account, cn: "manager2" },
+        { eid: getEid(1), cn: "manager1" },
+        { eid: getEid(2), cn: "manager2" },
       ],
     };
     let ret = await SDK.uploadTeam("byall_team", teamMap);
@@ -120,7 +126,7 @@ describe("byall", { timeout: 5000 }, () => {
     let ret = await SDK.startWorkflow(TPL_ID, wfid, "byall_team");
     //get worklist
     await SDK.sleep(500);
-    tmp1 = await SDK.getWorklist(testUsers[1].account, {
+    tmp1 = await SDK.getWorklist(getEid(1), {
       wfid: wfid,
       nodeid: "hellohyperflow",
       status: "ST_RUN",
@@ -131,7 +137,7 @@ describe("byall", { timeout: 5000 }, () => {
 
   it("Check manager2's worklist", async () => {
     await SDK.sleep(500);
-    tmp2 = await SDK.getWorklist(testUsers[2].account, {
+    tmp2 = await SDK.getWorklist(getEid(2), {
       wfid: wfid,
       nodeid: "hellohyperflow",
       status: "ST_RUN",
@@ -142,7 +148,7 @@ describe("byall", { timeout: 5000 }, () => {
 
   it("do manager1 work", async () => {
     await SDK.sleep(500);
-    let ret = await SDK.doWork(testUsers[1].account, tmp1.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(1), tmp1.objs[0].todoid, {
       reason: "Go hospital",
       extra: "Thank you",
     });
@@ -157,7 +163,7 @@ describe("byall", { timeout: 5000 }, () => {
 
   it("do manager2's work", async () => {
     await SDK.sleep(500);
-    let ret = await SDK.doWork(testUsers[2].account, tmp2.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(2), tmp2.objs[0].todoid, {
       reason: "Go hospital",
       extra: "Thank you",
     });

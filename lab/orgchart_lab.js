@@ -54,6 +54,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let wfid2 = "lkh_" + SDK.guid();

@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Tones load: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   SDK.setServer("http://emp.localhost");
@@ -89,7 +95,7 @@ describe("Tones load: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -140,11 +146,11 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   it("Step 1", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total > 0).to.be.true();
     expect(wlist.objs[0].title).to.equal("test set multiple variables");
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       days: { value: leave_days },
       reason: { value: "Go hospital" },
       extra: { value: "Thank you", label: "Extra Title" },
@@ -158,13 +164,14 @@ describe("Tones load: ", { timeout: 5000 }, () => {
 
   for (let i = 0; i < repeat_times; i++) {
     it(`Revoke_${i}`, { timeout: 20000 }, async () => {
-      ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 10);
+      ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 10);
       expect(ret.objs[0].title).to.equal("test check variables");
-      ret = await SDK.sendback(testUsers[0].account, wfid, ret.objs[0].todoid);
-      ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 10);
+      ret = await SDK.sendback(getEid(0), wfid, ret.objs[0].todoid);
+      await SDK.sleep(2000);
+      ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 10);
 
       expect(ret.objs[0].title).to.equal("test set multiple variables");
-      let retDoWork = await SDK.doWork(testUsers[0].account, ret.objs[0].todoid, {
+      let retDoWork = await SDK.doWork(getEid(0), ret.objs[0].todoid, {
         days: { value: leave_days + i },
         reason: { value: "Go hospital_" + i },
         extra: { value: "Thank you_" + i, label: "Extra Title" },
@@ -182,9 +189,9 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   });
 
   it("Do check variables with 999999", { timeout: 5000 }, async () => {
-    ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 10);
+    ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 10);
     expect(ret.objs[0].title).to.equal("test check variables");
-    let retDoWork = await SDK.doWork(testUsers[0].account, ret.objs[0].todoid, {
+    let retDoWork = await SDK.doWork(getEid(0), ret.objs[0].todoid, {
       days: { value: 999999 },
     });
     expect(retDoWork.todoid).to.equal(ret.objs[0].todoid);
@@ -196,7 +203,7 @@ describe("Tones load: ", { timeout: 5000 }, () => {
 
   it("Do activity3 ", { timeout: 5000 }, async () => {
     //wait script node complete by trying to get next running work many times
-    ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 20);
+    ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 20);
     console.log(ret);
     expect(ret.total).to.equal(1);
     expect(ret.objs[0].title).to.equal("Activity3");
@@ -208,7 +215,7 @@ describe("Tones load: ", { timeout: 5000 }, () => {
     expect(allvars["extra"].value).to.equal("Thank you_" + (repeat_times - 1));
     expect(allvars["script_echo"].value).to.equal("hello script");
 
-    ret = await SDK.doWork(testUsers[0].account, ret.objs[0].todoid, { days: 3 });
+    ret = await SDK.doWork(getEid(0), ret.objs[0].todoid, { days: 3 });
 
     allvars = await SDK.getKVars(wfid);
     expect(allvars["days"].value).to.equal(3);
@@ -218,7 +225,7 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   });
 
   it("Should have no workitem now", { timeout: 10000 }, async () => {
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" }, 3);
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 3);
     console.log(wlist);
     expect(wlist.total).to.equal(0);
   });

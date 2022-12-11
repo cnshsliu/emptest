@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("timer.js: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   SDK.setServer("http://emp.localhost");
@@ -89,7 +95,7 @@ describe("timer.js: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -139,32 +145,32 @@ describe("timer.js: ", { timeout: 5000 }, () => {
   it(" Get worklist", { timeout: 90000 }, async () => {
     //get worklist
     await SDK.sleep(1000);
-    let ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(ret.objs[0].nodeid).to.equal("action1");
-    ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action1");
+    ret = await SDK.doWorkByNode(getEid(0), wfid, "action1");
   });
 
   let workid_action1_round_1 = "";
   it("1> Do action1, wait timer for action2", { timeout: 90000 }, async () => {
     //get worklist
 
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action1");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1");
     let i = 0;
     for (i = 0; i < 30; i++) {
-      ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+      ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
       if (ret.objs.length > 0 && ret.objs[0].nodeid === "action2") {
         break;
       } else await SDK.sleep(1000);
     }
-    ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action2");
+    ret = await SDK.doWorkByNode(getEid(0), wfid, "action2");
     expect(ret.workid).to.be.string();
     for (i = 0; i < 30; i++) {
-      ret = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+      ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
       if (ret.objs.length > 0 && ret.objs[0].nodeid === "action3") {
         break;
       } else await SDK.sleep(1000);
     }
-    ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action3");
+    ret = await SDK.doWorkByNode(getEid(0), wfid, "action3");
     expect(ret.workid).to.be.string();
     await SDK.sleep(500);
     ret = await SDK.getStatus(wfid);

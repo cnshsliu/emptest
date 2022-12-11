@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   SDK.setServer("http://emp.localhost");
@@ -89,7 +95,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -140,7 +146,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("Do apply", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "apply",
       status: "ST_RUN",
@@ -148,7 +154,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("start");
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       days: leave_days,
       reason: "Go hospital",
       extra: "Thank you",
@@ -167,27 +173,27 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("Do approve_by_leader", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "approve_by_leader",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("apply");
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {}, "approve");
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {}, "approve");
     expect(ret.todoid).to.equal(wlist.objs[0].todoid);
   });
 
   it("Do approve_by_director ", { timeout: 5000 }, async () => {
     await SDK.sleep(2000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("approve_by_leader");
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "approve_by_director", {
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "approve_by_director", {
       days: 3,
     });
 
@@ -202,7 +208,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("Should have no workitem now", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(0);
   });
 

@@ -51,7 +51,13 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
-describe("Test: ", {timeout: 5000}, () => {
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
+describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   SDK.setServer("http://emp.localhost");
   // SDK.setServer("http://emp.localhost:5008");
@@ -89,7 +95,7 @@ describe("Test: ", {timeout: 5000}, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -140,7 +146,7 @@ describe("Test: ", {timeout: 5000}, () => {
   it("Do apply", { timeout: 5000 }, async () => {
     //get worklist
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "apply",
       status: "ST_RUN",
@@ -148,7 +154,7 @@ describe("Test: ", {timeout: 5000}, () => {
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("start");
 
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       days: leave_days,
       reason: "Go hospital",
       extra: "Thank you",
@@ -166,28 +172,28 @@ describe("Test: ", {timeout: 5000}, () => {
 
   it("Do approve_by_leader", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "approve_by_leader",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("apply");
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {}, "approve");
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {}, "approve");
     expect(ret.workid).to.equal(wlist.objs[0].workid);
   });
 
   let done_todoid = "";
   it("Do approve_by_director ", { timeout: 5000 }, async () => {
     await SDK.sleep(2000);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       nodeid: "approve_by_director",
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
     //expect(wlist.objs[0].from_nodeid).to.equal("approve_by_leader");
-    let ret = await SDK.doWork(testUsers[0].account, wlist.objs[0].todoid, {
+    let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       days: 3,
     });
 
@@ -198,7 +204,7 @@ describe("Test: ", {timeout: 5000}, () => {
   it("Do a not exist work ", { timeout: 5000 }, async () => {
     await SDK.sleep(2000);
     //expect(wlist.objs[0].from_nodeid).to.equal("approve_by_leader");
-    let ret = await SDK.doWork(testUsers[0].account, "nO_T_EXIST", {
+    let ret = await SDK.doWork(getEid(0), "nO_T_EXIST", {
       days: 3,
     });
     expect(ret.error).to.equal("WORK_RUNNING_NOT_EXIST");
@@ -207,7 +213,7 @@ describe("Test: ", {timeout: 5000}, () => {
   it("Do a alreay ST_DONE work ", { timeout: 5000 }, async () => {
     await SDK.sleep(2000);
     //expect(wlist.objs[0].from_nodeid).to.equal("approve_by_leader");
-    let ret = await SDK.doWork(testUsers[0].account, done_todoid, {
+    let ret = await SDK.doWork(getEid(0), done_todoid, {
       days: 3,
     });
     expect(ret.error).to.equal("WORK_RUNNING_NOT_EXIST");
@@ -222,7 +228,7 @@ describe("Test: ", {timeout: 5000}, () => {
 
   it("Should have no workitem now", { timeout: 5000 }, async () => {
     await SDK.sleep(500);
-    let wlist = await SDK.getWorklist(testUsers[0].account, { wfid: wfid, status: "ST_RUN" });
+    let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" });
     expect(wlist.total).to.equal(0);
   });
 

@@ -48,6 +48,12 @@ const testUsers = [
     name: "User006_" + SDK.randomString(7),
   },
 ];
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", () => {
   SDK.setServer("https://emp.localhost");
   it("prepare admin account ", async () => {

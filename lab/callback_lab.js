@@ -23,6 +23,12 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "callback";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Callback: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let childwfid = "";
@@ -64,7 +70,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -111,7 +117,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
   it("START Workflow ", async () => {
     let ret = await SDK.startWorkflow(TPL_ID, wfid);
     await SDK.sleep(2000);
-    let tmp1 = await SDK.getWorklist(testUsers[0].account, {
+    let tmp1 = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       status: "ST_RUN",
     });
@@ -126,7 +132,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
   it("1> Do action1", { timeout: 60000 }, async () => {
     //get worklist
     await SDK.sleep(200);
-    let ret = await SDK.doWork(testUsers[0].account, action1_todoid);
+    let ret = await SDK.doWork(getEid(0), action1_todoid);
     expect(ret.workid).to.exist();
     expect(ret.todoid).to.exist();
     expect(ret.doneat).to.exist();
@@ -167,7 +173,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
   //callback时，decision指向NO，因此，会运行的到 actionNO节点
   it("1> Check actionNO", { timeout: 60000 }, async () => {
     await SDK.sleep(200);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       wfid: wfid,
       status: "ST_RUN",
     });
@@ -176,7 +182,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
     expect(wlist.objs[0].nodeid).to.equal("actionNO");
     await SDK.sleep(200);
     let action_todoid = wlist.objs[0].todoid;
-    let tmp = await SDK.doWork(testUsers[0].account, action_todoid);
+    let tmp = await SDK.doWork(getEid(0), action_todoid);
     expect(tmp.todoid).to.equal(action_todoid);
     await SDK.sleep(200);
 

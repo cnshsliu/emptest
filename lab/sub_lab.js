@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let childwfid = "";
@@ -90,7 +96,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -142,7 +148,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("1> Do action1", { timeout: 60000 }, async () => {
     //get worklist
     await SDK.sleep(200);
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action1");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1");
   });
 
   it("1> Do sub_action1", { timeout: 60000 }, async () => {
@@ -150,7 +156,7 @@ describe("Test: ", { timeout: 5000 }, () => {
     let tmp = await SDK.workflowGetLatest({ tplid: "sub_1" });
     console.log(tmp);
     childwfid = tmp.wfid;
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       tplid: "sub_1",
       wfid: childwfid,
       status: "ST_RUN",
@@ -158,13 +164,13 @@ describe("Test: ", { timeout: 5000 }, () => {
     console.log(wlist);
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("sub_action1");
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wlist.objs[0].wfid, "sub_action1");
+    let ret = await SDK.doWorkByNode(getEid(0), wlist.objs[0].wfid, "sub_action1");
   });
 
   it("1> Do sub_action2", { timeout: 60000 }, async () => {
     await SDK.sleep(200);
     let wlist = await SDK.getWorklist(
-      testUsers[0].account,
+      getEid(0),
       {
         tplid: "sub_1",
         wfid: childwfid,
@@ -174,13 +180,13 @@ describe("Test: ", { timeout: 5000 }, () => {
     );
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("sub_action2");
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wlist.objs[0].wfid, "sub_action2");
+    let ret = await SDK.doWorkByNode(getEid(0), wlist.objs[0].wfid, "sub_action2");
   });
 
   it("1> Do parent.action2", { timeout: 60000 }, async () => {
     await SDK.sleep(2000);
     let wlist = await SDK.getWorklist(
-      testUsers[0].account,
+      getEid(0),
       {
         tplid: "parent_1",
         wfid: wfid,
@@ -190,16 +196,15 @@ describe("Test: ", { timeout: 5000 }, () => {
     );
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action2");
-    let ret = await SDK.doWorkByNode(testUsers[0].account, wlist.objs[0].wfid, "action2");
+    let ret = await SDK.doWorkByNode(getEid(0), wlist.objs[0].wfid, "action2");
   });
-  /*
 
   it("2> Do sub_action1", { timeout: 60000 }, async () => {
     await SDK.sleep(200);
     let tmp = await SDK.workflowGetLatest({ tplid: "sub_1" });
     childwfid = tmp.wfid;
     await SDK.sleep(200);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       tplid: "sub_1",
       wfid: childwfid,
       status: "ST_RUN",
@@ -207,21 +212,21 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("sub_action1");
     //在第一个节点上放置一个RET
-    ret = await SDK.doWorkByNode(testUsers[0].account, wlist.objs[0].wfid, "sub_action1", {
+    let ret = await SDK.doWorkByNode(getEid(0), wlist.objs[0].wfid, "sub_action1", {
       RET: "goto32",
     });
   });
 
   it("2> Do sub_action2", { timeout: 60000 }, async () => {
     await SDK.sleep(200);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       tplid: "sub_1",
       wfid: childwfid,
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("sub_action2");
-    ret = await SDK.doWorkByNode(testUsers[0].account, wlist.objs[0].wfid, "sub_action2");
+    let ret = await SDK.doWorkByNode(getEid(0), wlist.objs[0].wfid, "sub_action2");
     //sub_action2完成以后，sub流程结束
   });
 
@@ -229,28 +234,27 @@ describe("Test: ", { timeout: 5000 }, () => {
   // 这个会被导入到parent流程中，在parent流程中sub2返回值为goto32
   it("1> Do parent.action32", { timeout: 60000 }, async () => {
     await SDK.sleep(200);
-    let wlist = await SDK.getWorklist(testUsers[0].account, {
+    let wlist = await SDK.getWorklist(getEid(0), {
       tplid: "sub_1",
       wfid: childwfid,
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(0);
     await SDK.sleep(200);
-    wlist = await SDK.getWorklist(testUsers[0].account, {
+    wlist = await SDK.getWorklist(getEid(0), {
       tplid: "parent_1",
       wfid: wfid,
       status: "ST_RUN",
     });
     expect(wlist.total).to.equal(1);
     expect(["action31", "action32"]).to.include(wlist.objs[0].nodeid);
-    ret = await SDK.doWorkByNode(testUsers[0].account, wfid, "action32");
+    let ret = await SDK.doWorkByNode(getEid(0), wfid, "action32");
   });
   it("1> Check workflow status", { timeout: 60000 }, async () => {
     await SDK.sleep(1000);
     let ret = await SDK.getStatus(wfid);
     expect(ret).to.equal("ST_DONE");
   });
-  */
   it("cleaning up", async () => {
     await SDK.sleep(3000);
     await SDK.destroyWorkflowByTplid(TPL_ID);

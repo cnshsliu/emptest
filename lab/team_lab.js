@@ -51,6 +51,12 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test: ", { timeout: 5000 }, () => {
   let teamid = "team_test1";
   let team_iid = "";
@@ -91,7 +97,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -128,9 +134,9 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
   it("Upload a team", async () => {
     let teamMap = {
-      TEAM_LEADER: [{ eid: testUsers[1].account }],
-      MANAGER: [{ eid: testUsers[2].account }, { eid: testUsers[3].account }],
-      DIRECTOR: [{ eid: testUsers[4].account }],
+      TEAM_LEADER: [{ eid: getEid(1) }],
+      MANAGER: [{ eid: getEid(2) }, { eid: getEid(3) }],
+      DIRECTOR: [{ eid: getEid(4) }],
     };
     let ret = await SDK.uploadTeam(teamid, teamMap);
     expect(ret.teamid).to.equal(teamid);
@@ -141,14 +147,14 @@ describe("Test: ", { timeout: 5000 }, () => {
     let ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.MANAGER[1].cn).to.equal(testUsers[3].name);
     expect(ret.tmap.MANAGER[0].cn).to.equal(testUsers[2].name);
-    expect(ret.tmap.DIRECTOR[0].eid).to.equal(testUsers[4].account);
+    expect(ret.tmap.DIRECTOR[0].eid).to.equal(getEid(4));
     the_map = ret.tmap;
   });
 
   it("Upload a team again to overwrite tmap", async () => {
     let teamMap = {
-      TEAM_LEADER: [{ eid: testUsers[1].account }],
-      DIRECTOR: [{ eid: testUsers[4].account }],
+      TEAM_LEADER: [{ eid: getEid(1) }],
+      DIRECTOR: [{ eid: getEid(4) }],
     };
     let ret = await SDK.uploadTeam(teamid, teamMap);
     expect(ret.teamid).to.equal(teamid);
@@ -156,14 +162,14 @@ describe("Test: ", { timeout: 5000 }, () => {
     ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.TEAM_LEADER[0].cn).to.equal(testUsers[1].name);
     expect(ret.tmap.MANAGER).to.equal(undefined);
-    expect(ret.tmap.DIRECTOR[0].eid).to.equal(testUsers[4].account);
+    expect(ret.tmap.DIRECTOR[0].eid).to.equal(getEid(4));
     the_map = ret.tmap;
   });
   it("Step4", async () => {
     let ret = await SDK.addRoleMembers(teamid, "TEAM_LEADER", [
-      { eid: testUsers[1].account },
-      { eid: testUsers[2].account },
-      { eid: testUsers[3].account },
+      { eid: getEid(1) },
+      { eid: getEid(2) },
+      { eid: getEid(3) },
     ]);
     console.log(JSON.stringify(ret));
     expect(ret.tmap.TEAM_LEADER.length).to.equal(3);
@@ -174,9 +180,9 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
   it("Step5", async () => {
     await SDK.addRoleMembers(teamid, "TEAM_LEADER", [
-      { eid: testUsers[1].account },
-      { eid: testUsers[2].account },
-      { eid: testUsers[3].account },
+      { eid: getEid(1) },
+      { eid: getEid(2) },
+      { eid: getEid(3) },
     ]);
     let ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.TEAM_LEADER.length).to.equal(3);
@@ -184,49 +190,40 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
 
   it("Step6", async () => {
-    await SDK.addRoleMembers(teamid, "MANAGER", [
-      { eid: testUsers[2].account },
-      { eid: testUsers[3].account },
-    ]);
+    await SDK.addRoleMembers(teamid, "MANAGER", [{ eid: getEid(2) }, { eid: getEid(3) }]);
     let ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.MANAGER[1].cn).to.equal(testUsers[3].name);
     expect(ret.tmap.MANAGER[0].cn).to.equal(testUsers[2].name);
-    expect(ret.tmap.DIRECTOR[0].eid).to.equal(testUsers[4].account);
+    expect(ret.tmap.DIRECTOR[0].eid).to.equal(getEid(4));
   });
 
   it("Step7", async () => {
-    // const del = await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [{ eid: testUsers[1].account }]);
-    const del = await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [testUsers[1].account]);
+    // const del = await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [{ eid: getEid(1) }]);
+    const del = await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [getEid(1)]);
     let ret = await SDK.getTeamFullInfo(teamid);
     console.log(del);
     console.log("-------");
     console.log(ret.tmap.TEAM_LEADER);
     expect(ret.tmap.TEAM_LEADER.length).to.equal(2);
     expect(ret.tmap.TEAM_LEADER[1].cn).to.equal(testUsers[3].name);
-    await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [
-      testUsers[2].account,
-      testUsers[3].account,
-    ]);
+    await SDK.deleteRoleMembers(teamid, "TEAM_LEADER", [getEid(2), getEid(3)]);
     ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.TEAM_LEADER.length).to.equal(0);
   });
 
   it("Set roles", async () => {
     await SDK.setRole(teamid, "APPROVER", [
-      { eid: testUsers[2].account },
-      { eid: testUsers[3].account },
-      { eid: testUsers[4].account },
+      { eid: getEid(2) },
+      { eid: getEid(3) },
+      { eid: getEid(4) },
     ]);
-    await SDK.setRole(teamid, "MANAGER", [
-      { eid: testUsers[2].account },
-      { eid: testUsers[4].account },
-    ]);
+    await SDK.setRole(teamid, "MANAGER", [{ eid: getEid(2) }, { eid: getEid(4) }]);
     let ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap.MANAGER[1].cn).to.equal(testUsers[4].name);
     expect(ret.tmap.MANAGER[0].cn).to.equal(testUsers[2].name);
-    expect(ret.tmap.DIRECTOR[0].eid).to.equal(testUsers[4].account);
-    expect(ret.tmap.APPROVER[0].eid).to.equal(testUsers[2].account);
-    expect(ret.tmap.APPROVER[2].eid).to.equal(testUsers[4].account);
+    expect(ret.tmap.DIRECTOR[0].eid).to.equal(getEid(4));
+    expect(ret.tmap.APPROVER[0].eid).to.equal(getEid(2));
+    expect(ret.tmap.APPROVER[2].eid).to.equal(getEid(4));
     the_map = ret.tmap;
   });
 
@@ -236,7 +233,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
 
   it("Test add person to team", async () => {
-    the_map["DIRECTOR"].push({ eid: testUsers[5].account });
+    the_map["DIRECTOR"].push({ eid: getEid(5) });
     let ret = await SDK.uploadTeam(teamid, the_map);
     ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap["DIRECTOR"].length).to.equal(2);

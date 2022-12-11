@@ -52,6 +52,12 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "inform_example";
 
+const getAccount = (number) => {
+  return testUsers[number].account;
+};
+const getEid = (number) => {
+  return getAccount(number) + "_eid";
+};
 describe("Test Permission Control: ", { timeout: 5000 }, () => {
   let username = "";
   let password = "";
@@ -96,7 +102,7 @@ describe("Test Permission Control: ", { timeout: 5000 }, () => {
 
     let joincodeRet = await SDK.orgJoinCodeNew();
     //申请加入组织
-    for (let i = 1; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
       let ret = await SDK.orgJoin(joincodeRet.joincode);
       expect(ret.code).to.equal("ok");
@@ -132,8 +138,8 @@ describe("Test Permission Control: ", { timeout: 5000 }, () => {
     expect(myorg.joinapps).to.be.empty();
   });
   it("set member's group", async () => {
-    res = await SDK.orgSetEmployeeGroup([testUsers[1].account], "DOER");
-    res = await SDK.orgSetEmployeeGroup([testUsers[2].account], "OBSERVER");
+    res = await SDK.orgSetEmployeeGroup([getEid(1)], "DOER");
+    res = await SDK.orgSetEmployeeGroup([getEid(2)], "OBSERVER");
   });
   it("check admin's perm", async () => {
     res = await SDK.myPerm("template", "create");
@@ -175,85 +181,85 @@ describe("Test Permission Control: ", { timeout: 5000 }, () => {
   });
 
   it("check DOER's perm", async () => {
-    res = await SDK.employeePerm(testUsers[1].account, "template", "create");
+    res = await SDK.employeePerm(getEid(1), "template", "create");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "template", "read");
+    res = await SDK.employeePerm(getEid(1), "template", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "template", "update");
+    res = await SDK.employeePerm(getEid(1), "template", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[1].account, "template", "delete");
-    expect(res).to.be.false();
-
-    res = await SDK.employeePerm(testUsers[1].account, "workflow", "create");
-    expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "workflow", "read");
-    expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "workflow", "update");
-    expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[1].account, "workflow", "delete");
+    res = await SDK.employeePerm(getEid(1), "template", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.employeePerm(testUsers[1].account, "work", "create");
+    res = await SDK.employeePerm(getEid(1), "workflow", "create");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "work", "read");
+    res = await SDK.employeePerm(getEid(1), "workflow", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "work", "update");
+    res = await SDK.employeePerm(getEid(1), "workflow", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[1].account, "work", "delete");
+    res = await SDK.employeePerm(getEid(1), "workflow", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.employeePerm(testUsers[1].account, "team", "create");
+    res = await SDK.employeePerm(getEid(1), "work", "create");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "team", "read");
+    res = await SDK.employeePerm(getEid(1), "work", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[1].account, "team", "update");
+    res = await SDK.employeePerm(getEid(1), "work", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[1].account, "team", "delete");
+    res = await SDK.employeePerm(getEid(1), "work", "delete");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[1].account, "*", "admin");
+
+    res = await SDK.employeePerm(getEid(1), "team", "create");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(getEid(1), "team", "read");
+    expect(res).to.be.true();
+    res = await SDK.employeePerm(getEid(1), "team", "update");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(getEid(1), "team", "delete");
+    expect(res).to.be.false();
+    res = await SDK.employeePerm(getEid(1), "*", "admin");
     expect(res).to.be.false();
   });
   it("check ADMIN's perm", async () => {
-    res = await SDK.employeePerm(testUsers[0].account, "*", "admin");
+    res = await SDK.employeePerm(getEid(0), "*", "admin");
     expect(res).to.be.true();
   });
   it("check OBSERVER's perm", async () => {
-    res = await SDK.employeePerm(testUsers[2].account, "template", "create");
+    res = await SDK.employeePerm(getEid(2), "template", "create");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "template", "read");
+    res = await SDK.employeePerm(getEid(2), "template", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[2].account, "template", "update");
+    res = await SDK.employeePerm(getEid(2), "template", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "template", "delete");
+    res = await SDK.employeePerm(getEid(2), "template", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.employeePerm(testUsers[2].account, "workflow", "create");
+    res = await SDK.employeePerm(getEid(2), "workflow", "create");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "workflow", "read");
+    res = await SDK.employeePerm(getEid(2), "workflow", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[2].account, "workflow", "update");
+    res = await SDK.employeePerm(getEid(2), "workflow", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "workflow", "delete");
+    res = await SDK.employeePerm(getEid(2), "workflow", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.employeePerm(testUsers[2].account, "work", "create");
+    res = await SDK.employeePerm(getEid(2), "work", "create");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "work", "read");
+    res = await SDK.employeePerm(getEid(2), "work", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[2].account, "work", "update");
+    res = await SDK.employeePerm(getEid(2), "work", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "work", "delete");
+    res = await SDK.employeePerm(getEid(2), "work", "delete");
     expect(res).to.be.false();
 
-    res = await SDK.employeePerm(testUsers[2].account, "team", "create");
+    res = await SDK.employeePerm(getEid(2), "team", "create");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "team", "read");
+    res = await SDK.employeePerm(getEid(2), "team", "read");
     expect(res).to.be.true();
-    res = await SDK.employeePerm(testUsers[2].account, "team", "update");
+    res = await SDK.employeePerm(getEid(2), "team", "update");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "team", "delete");
+    res = await SDK.employeePerm(getEid(2), "team", "delete");
     expect(res).to.be.false();
-    res = await SDK.employeePerm(testUsers[2].account, "*", "admin");
+    res = await SDK.employeePerm(getEid(2), "*", "admin");
     expect(res).to.be.false();
   });
 
