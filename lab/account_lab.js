@@ -57,10 +57,6 @@ describe("Test: ", () => {
   });
   it("Login ", async () => {
     let ret = await SDK.register(testUsers[0].account, testUsers[0].name, testUsers[0].passwd);
-    console.log("================================================================================");
-    console.log(ret);
-    console.log("================================================================================");
-
     expect(ret.account).to.equal(testUsers[0].account);
     ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);
     expect(ret.user.account).to.equal(testUsers[0].account);
@@ -122,7 +118,7 @@ describe("Test: ", () => {
     expect(ret.validation?.source).to.equal("payload");
     expect(ret.validation?.keys).to.include("username");
     ret = await SDK.setUserName("newusername");
-    expect(ret.username).to.equal("newusername");
+    expect(ret.user.username).to.equal("newusername");
     ret = await SDK.profile();
     expect(ret.user.username).to.equal("newusername");
   });

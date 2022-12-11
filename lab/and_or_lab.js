@@ -48,7 +48,7 @@ const testUsers = [
 ];
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
-describe("Test and_or logic", {timeout: 5000}, () => {
+describe("Test and_or logic", { timeout: 5000 }, () => {
   SDK.setServer("https://emp.localhost");
   let wfid = "lkh_" + SDK.guid();
   let tmptodoid = "";
@@ -66,7 +66,7 @@ describe("Test and_or logic", {timeout: 5000}, () => {
       await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
       for (let i = 0; i < testUsers.length; i++) {
         let ret = await SDK.removeUser(testUsers[i].account, SITE_PWD);
-        console.log(ret);
+        //console.log(ret);
         expect(ret.deleted).to.equal(testUsers[i].account);
       }
     } finally {
@@ -74,7 +74,7 @@ describe("Test and_or logic", {timeout: 5000}, () => {
     //重新注册所有测试用户
     for (let i = 0; i < testUsers.length; i++) {
       let ret = await SDK.register(testUsers[i].account, testUsers[i].name, testUsers[i].passwd);
-      console.log(ret);
+      //console.log(ret);
       expect(ret.account).to.equal(testUsers[i].account);
     }
     let ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);

@@ -118,7 +118,7 @@ describe("Test: ", () => {
     expect(ret.validation?.keys).to.include("username");
     ret = await SDK.setUserName("newusername");
     console.log(ret);
-    expect(ret.username).to.equal("newusername");
+    expect(ret.user.username).to.equal("newusername");
     ret = await SDK.profile();
     expect(ret.user.username).to.equal("newusername");
   });

@@ -23,7 +23,7 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "my_byall";
 
-describe("byall", {timeout: 5000}, () => {
+describe("byall", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
   let tmp1, tmp2;
   // SDK.setServer("http://emp.localhost:5008");
@@ -69,19 +69,19 @@ describe("byall", {timeout: 5000}, () => {
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
     let myorg = await SDK.orgMyOrg();
-    console.log(myorg);
+    //console.log(myorg);
 
     //审批测试用户加入申请
     let accountsToApprove = myorg.joinapps.map((x) => x.account);
     let leftApps = await SDK.orgApprove(accountsToApprove);
-    console.log(leftApps);
+    //console.log(leftApps);
     //审批后，返回的joinapps应该是空数组
     expect(leftApps.ret).to.equal("array");
     expect(leftApps.joinapps).to.be.an.array();
     expect(leftApps.joinapps).to.be.empty();
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    console.log(myorg);
+    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
