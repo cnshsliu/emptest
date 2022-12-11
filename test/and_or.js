@@ -1,7 +1,13 @@
 "use strict";
 
-const { describe, it } = require("node:test");
-const { expect } = require("@hapi/code");
+const Lab = require("@hapi/lab");
+const Code = require("@hapi/code");
+const { expect } = Code;
+const { after, before, describe, it } = (exports.lab = Lab.script({
+  cli: {
+    timeout: 10000,
+  },
+}));
 const SDK = require("../app.js");
 const fs = require("fs");
 const SITE_PWD = "site_password_999";
@@ -46,7 +52,7 @@ const testUsers = [
 ];
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
-describe("Test and_or logic", async () => {
+describe("Test and_or logic", () => {
   let wfid = "lkh_" + SDK.guid();
   let tmptodoid = "";
   SDK.setServer("http://emp.localhost:5008");
@@ -63,7 +69,6 @@ describe("Test and_or logic", async () => {
       await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
       for (let i = 0; i < testUsers.length; i++) {
         let ret = await SDK.removeUser(testUsers[i].account, SITE_PWD);
-        console.log(ret);
         expect(ret.deleted).to.equal(testUsers[i].account);
       }
     } finally {
@@ -71,7 +76,6 @@ describe("Test and_or logic", async () => {
     //重新注册所有测试用户
     for (let i = 0; i < testUsers.length; i++) {
       let ret = await SDK.register(testUsers[i].account, testUsers[i].name, testUsers[i].passwd);
-      console.log(ret);
       expect(ret.account).to.equal(testUsers[i].account);
     }
     let ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);
@@ -112,7 +116,6 @@ describe("Test and_or logic", async () => {
     expect(myorg.joinapps).to.be.empty();
   });
 
-  /*
   it("Step 2: Upload template", async () => {
     const ret = await SDK.putTemplate(
       fs.readFileSync(TEST_TEMPLATE_DIR + "/test_and_or.xml", "utf8"),
@@ -321,7 +324,6 @@ describe("Test and_or logic", async () => {
     let ret = await SDK.getStatus(wfid);
     expect(ret).to.equal("ST_DONE");
   });
-  */
   //clearnup tenant;
   it("cleaning up", async () => {
     await SDK.sleep(3000);

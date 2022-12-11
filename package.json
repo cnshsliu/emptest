@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/code": "^8.0.5",
-    "@hapi/lab": "^24.4.0",
+    "@hapi/lab": "^25.0.1",
     "axios": "^0.24.0",
     "form-data": "^4.0.0",
     "moment": "^2.29.4",

@@ -1,7 +1,12 @@
 "use strict";
-
-const { describe, it } = require("node:test");
-const { expect } = require("@hapi/code");
+const Lab = require("@hapi/lab");
+const Code = require("@hapi/code");
+const { expect } = Code;
+const { after, before, describe, it } = (exports.lab = Lab.script({
+  cli: {
+    timeout: 10000,
+  },
+}));
 const SDK = require("../app.js");
 const fs = require("fs");
 const SITE_PWD = "site_password_999";
@@ -52,7 +57,7 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 describe("Test: ", () => {
   let wfid = "lkh_" + SDK.guid();
   let wfid2 = "lkh_" + SDK.guid();
-  SDK.setServer("http://emp.localhost:5008");
+  SDK.setServer("https://emp.localhost");
   it("prepare admin account ", async () => {
     try {
       await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
@@ -88,15 +93,17 @@ describe("Test: ", () => {
     //申请加入组织
     for (let i = 1; i < testUsers.length; i++) {
       await SDK.login(testUsers[i].account, testUsers[i].passwd);
-
       let ret = await SDK.orgJoin(joincodeRet.joincode);
+      console.log("===========");
+      console.log(ret);
+      console.log("===========");
       expect(ret.code).to.equal("ok");
     }
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
     let myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
+    // console.log(myorg);
 
     //审批测试用户加入申请
     let accountsToApprove = myorg.joinapps.map((x) => x.account);
@@ -111,6 +118,121 @@ describe("Test: ", () => {
     //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
+  });
+
+  it("orgchart manage", async () => {
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
+    //判断是否组织模式
+    let myorg = await SDK.orgMyOrg();
+    console.log("myorg-------");
+    console.log(myorg);
+    expect(myorg.orgmode).to.equal(true);
+
+    await SDK.addOrgchart({
+      password: "123456",
+      content: "root,我的公司,,,,,",
+      default_user_password: "not required",
+    });
+    let expandOrg = await SDK.expandOrgchart({
+      ou: "root",
+      include: true,
+    });
+    console.log("expandOrg------");
+    console.log(expandOrg);
+    expect(expandOrg).to.be.an.array();
+    // todo 其他校验
+
+    // 添加部门
+    let addOrgRes1 = await SDK.addOrgchart({
+      password: "123456",
+      content: "12345,技术部,,,,,",
+      default_user_password: "not required",
+    });
+    expect(addOrgRes1.ret).to.equal("ok");
+    expect(addOrgRes1.logs).to.be.an.array();
+    // 单条添加员工
+    let addOrgRes2 = await SDK.addOrgchart({
+      password: "Password@2022",
+      content: `12345,testaaa,${testUsers[1].account},,,,`,
+      default_user_password: "Password@2022",
+    });
+    expect(addOrgRes2.ret).to.equal("ok");
+
+    await SDK.addOrgchart({
+      password: "123456",
+      content: "1234500001,技术部1,,,,,",
+      default_user_password: "not required",
+    });
+    await SDK.addOrgchart({
+      password: "123456",
+      content: "1234500002,技术部2,,,,,",
+      default_user_password: "not required",
+    });
+    await SDK.addOrgchart({
+      password: "123456",
+      content: "123450000100001,技术部1-1,,,,,",
+      default_user_password: "not required",
+    });
+
+    // 获取所有ous
+    let allousFromOrgchart = await SDK.getAllousFromOrgchart();
+    expect(allousFromOrgchart).to.be.an.array();
+
+    // 复制员工
+    let copyStaff = await SDK.copyOrMoveStaff({
+      action: "copy",
+      from: "12345",
+      to: "root",
+      eid: testUsers[1].account,
+    });
+    console.log("copyStaff=========");
+    console.log(copyStaff);
+    expect(copyStaff).to.equal("Done");
+
+    await SDK.addOrgchart({
+      password: "Password@2022",
+      content: `123450000100001,testaaa,${testUsers[2].account},,,,`,
+      default_user_password: "Password@2022",
+    });
+    // 移动员工
+    // let moveStaff = await SDK.copyOrMoveStaff({
+    //   "action":"move",
+    //   "from":"12345",
+    //   "to":"root",
+    //   "cn":"zhangsan",
+    //   "eid": 'zsl11'
+    // })
+    // expect(moveStaff).to.equal('Done');
+
+    // 删除部门
+    let delOrg = await SDK.addOrgchart({
+      password: "Qwe22!",
+      content: "D,12345,,,,,,",
+      default_user_password: "not required",
+    });
+    console.log("del======");
+    console.log(delOrg);
+    expect(delOrg.ret).to.equal("ok");
+
+    // ou list
+    let listOrgchartOU = await SDK.listOrgchartOU({ top: "root", withTop: "yes" });
+    console.log(listOrgchartOU);
+    expect(listOrgchartOU).to.be.an.array();
+
+    // 组织list
+    let listOrgchart = await SDK.listOrgchart({});
+    console.log(listOrgchart);
+    expect(listOrgchart).to.be.an.array();
+
+    // 获取所有工作人员
+    let getStaffWithinOrgchart = await SDK.getStaffWithinOrgchart({ qstr: "zsl111" });
+    expect(getStaffWithinOrgchart).to.be.an.array();
+
+    // 获取员工所有leader
+    let allLeader = await SDK.getLeaderWithinOrgchart({ leader: "zsl111", eid: "zsl111" });
+    expect(allLeader).to.be.an.array();
+
+    //todo 上传下载excel
   });
 
   it("cleaning up", async () => {

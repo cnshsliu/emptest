@@ -1,6 +1,8 @@
 "use strict";
 
-const { describe, it } = require("node:test");
+const Lab = require("@hapi/lab");
+const { after, before, describe, it } = (exports.lab = Lab.script());
+//const { describe, it } = require("node:test");
 const { expect } = require("@hapi/code");
 const SDK = require("../app.js");
 const fs = require("fs");
@@ -54,6 +56,10 @@ describe("Test: ", () => {
   });
   it("Login ", async () => {
     let ret = await SDK.register(testUsers[0].account, testUsers[0].name, testUsers[0].passwd);
+    console.log("================================================================================");
+    console.log(ret);
+    console.log("================================================================================");
+
     expect(ret.account).to.equal(testUsers[0].account);
     ret = await SDK.login(testUsers[0].account, testUsers[0].passwd);
     expect(ret.user.account).to.equal(testUsers[0].account);
@@ -71,7 +77,6 @@ describe("Test: ", () => {
   it("Register the same account again should fail", async () => {
     SDK.setHttpTimeout(5000);
     let res = await SDK.register(testUsers[0].account, testUsers[0].name, testUsers[0].passwd);
-    console.log("Register returned:", res);
     expect(res?.error).to.equal("DUPLICATE_TENANT_DOMAIN");
     expect(res.message).to.include("already exists");
   });
@@ -111,13 +116,11 @@ describe("Test: ", () => {
 
   it("change name", async () => {
     let ret = await SDK.setUserName("NEW_USERNAME@");
-    console.log(ret);
     expect(ret.statusCode).to.equal(400);
     expect(ret.error).to.equal("Bad Request");
     expect(ret.validation?.source).to.equal("payload");
     expect(ret.validation?.keys).to.include("username");
     ret = await SDK.setUserName("newusername");
-    console.log(ret);
     expect(ret.user.username).to.equal("newusername");
     ret = await SDK.profile();
     expect(ret.user.username).to.equal("newusername");
@@ -126,7 +129,6 @@ describe("Test: ", () => {
     await SDK.setUserPassword(testUsers[0].passwd, "NEW_PASSWORD");
     let ret = await SDK.logout();
     ret = await SDK.login(testUsers[0].account, "NEW_PASSWORD");
-    console.log(ret);
     expect(ret.user.account).to.equal(testUsers[0].account);
     expect(ret.user.username).to.equal("newusername");
   });
