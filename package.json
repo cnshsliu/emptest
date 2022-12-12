@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lab": "lab ./lab --assert @hapi/code"
+    "lab": "lab --assert @hapi/code"
   },
   "author": "lucaskhliu <liukehong@gmail.com> (https://www.metatocome.com/)",
   "license": "ISC",
