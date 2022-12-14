@@ -242,7 +242,7 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
   it("Test copy role", async () => {
     await SDK.copyRole(teamid, "DIRECTOR", "DIRECTOR_COPY");
-    ret = await SDK.getTeamFullInfo(teamid);
+    let ret = await SDK.getTeamFullInfo(teamid);
     expect(ret.tmap["DIRECTOR_COPY"].length).to.equal(2);
     expect(ret.tmap["DIRECTOR_COPY"][1].cn).to.equal(testUsers[5].name);
   });

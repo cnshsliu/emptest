@@ -708,6 +708,11 @@ const HyperAutomation = {
     return ret;
   },
   importFromExcel: async function (param) {
+    const headers = {
+      authorization: HyperAutomation.axiosOptions.headers.authorization,
+      ...param.getHeaders()
+    };
+    HyperAutomation.axiosOptions.headers = headers
     let ret = await HyperAutomation.post("orgchart/import/excel", param);
     return ret;
   },
