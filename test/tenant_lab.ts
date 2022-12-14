@@ -56,7 +56,7 @@ const getEid = (number) => {
 };
 
 describe("Test: ", { timeout: 10000 }, () => {
-  SDK.setServer("http://124.223.94.157:5008");
+  SDK.setServer("http://emp.localhost");
   it("prepare admin account ", async () => {
     try {
       await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
