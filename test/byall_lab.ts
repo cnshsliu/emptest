@@ -195,5 +195,6 @@ describe("byall", { timeout: 5000 }, () => {
       await SDK.removeUser(testUsers[i].account, SITE_PWD);
     }
     await SDK.removeUser(testUsers[0].account, SITE_PWD);
+    await SDK.removeUser(SITE_ADMIN.account, SITE_PWD);
   });
 });

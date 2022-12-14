@@ -3,7 +3,7 @@ import * as Lab from "@hapi/lab";
 import { expect } from "@hapi/code";
 const lab = Lab.script();
 const { describe, it, before } = lab;
-const FormData = require('form-data');
+const FormData = require("form-data");
 export { lab };
 import SDK from "../app.js";
 import HyperAutomation from "../app.js";
@@ -94,35 +94,35 @@ describe("Test: ", { timeout: 5000 }, () => {
     await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
     ret = await SDK.post("/tnt/set/orgmode", { password: SITE_PWD, tenant_id: tenant_id });
     expect(ret).to.equal(true);
-    await SDK.login(testUsers[0].account, testUsers[0].passwd);    
+    await SDK.login(testUsers[0].account, testUsers[0].passwd);
   });
-  it('xlsximport', async () => {
+  it("xlsximport", async () => {
     let data = new FormData();
-    await data.append('file', fs.createReadStream('./static/orgchart.xlsx'));
-    let ret = await SDK.importFromExcel(data)
-    console.log(ret)
-    expect(ret.ret).to.equal('ok')
+    await data.append("file", fs.createReadStream("./static/orgchart.xlsx"));
+    let ret = await SDK.importFromExcel(data);
+    console.log(ret);
+    expect(ret.ret).to.equal("ok");
 
     HyperAutomation.setHeader("Content-type", "application/json");
-    // 
+    //
     ret = await SDK.post("orgchart/allous", {});
-    console.log(ret)
+    console.log(ret);
     // cons
     expect(ret.length).to.equal(4);
-    expect(ret[0].ou).to.equal('root');
+    expect(ret[0].ou).to.equal("root");
     expect(ret[0].level).to.equal(0);
     expect(ret[1].level).to.equal(1);
-    expect(ret[1].eid).to.equal('OU---');
+    expect(ret[1].eid).to.equal("OU---");
 
-    ret = await SDK.post("orgchart/expand", {"ou": "root", "include": true});
-    console.log(ret)
+    ret = await SDK.post("orgchart/expand", { ou: "root", include: true });
+    console.log(ret);
     expect(ret.length).to.equal(5);
-    expect(ret[0].ou).to.equal('root');
+    expect(ret[0].ou).to.equal("root");
     expect(ret[0].account).to.equal(getAccount(0));
     expect(ret[1].account).to.equal(getAccount(1));
     expect(ret[1].eid).to.equal(getEid(1));
-    expect(ret[1].position[0]).to.equal('CEO');
-  })
+    expect(ret[1].position[0]).to.equal("CEO");
+  });
   it("cleaning up", async () => {
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     await SDK.sleep(1000);
@@ -133,5 +133,6 @@ describe("Test: ", { timeout: 5000 }, () => {
       await SDK.removeUser(testUsers[i].account, SITE_PWD);
     }
     await SDK.removeUser(testUsers[0].account, SITE_PWD);
+    await SDK.removeUser(SITE_ADMIN.account, SITE_PWD);
   });
 });

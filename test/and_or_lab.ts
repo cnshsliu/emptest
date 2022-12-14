@@ -347,5 +347,6 @@ describe("Test and_or logic", { timeout: 5000 }, () => {
     for (let i = 0; i < testUsers.length; i++) {
       await SDK.removeUser(testUsers[i].account, SITE_PWD);
     }
+    await SDK.removeUser(SITE_ADMIN.account, SITE_PWD);
   });
 });

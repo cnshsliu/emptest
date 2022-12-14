@@ -1,7 +1,7 @@
 "use strict";
 import * as Lab from "@hapi/lab";
 import { expect } from "@hapi/code";
-import SDK from "../app.js"
+import SDK from "../app.js";
 const lab = Lab.script();
 const { describe, it, before } = lab;
 
@@ -46,7 +46,7 @@ const testUsers = [
     passwd: "Password@123",
     name: "User006_" + SDK.randomString(6),
   },
-]
+];
 
 const getAccount = (number) => {
   return testUsers[number].account;
@@ -127,17 +127,17 @@ describe("Test: ", { timeout: 10000 }, () => {
   it("Step2: update group", async () => {
     let eids: string[] = [];
     let group = ["ADMIN", "OBSERVER", "DOER"];
-    for(let i = 1; i < 3; i++) {
+    for (let i = 1; i < 3; i++) {
       let eid = testUsers[i].account + "_eid";
       eids.push(eid);
     }
-    let ret = await SDK.orgSetEmployeeGroup(eids, "OBSERVER" );
+    let ret = await SDK.orgSetEmployeeGroup(eids, "OBSERVER");
     expect(ret).to.be.an.object();
     expect(ret.ret).to.equal("done");
-    let res = await SDK.orgSetEmployeeGroup([testUsers[3].account + "_eid"], "ADMIN" );
+    let res = await SDK.orgSetEmployeeGroup([testUsers[3].account + "_eid"], "ADMIN");
     expect(res).to.be.an.object();
     expect(res.ret).to.equal("done");
-    let rep = await SDK.orgSetEmployeeGroup([testUsers[1].account + "_eid"], "DOER" );
+    let rep = await SDK.orgSetEmployeeGroup([testUsers[1].account + "_eid"], "DOER");
     expect(rep).to.be.an.object();
     expect(rep.ret).to.equal("done");
     let employees = await SDK.orgGetEmployees({ active: 3 });
@@ -147,13 +147,16 @@ describe("Test: ", { timeout: 10000 }, () => {
     expect(employees[2].group).to.equal("ADMIN");
   });
   it("Step3: update password", async () => {
-    let ret = await SDK.post("tnt/employee/setpassword", { eids: [testUsers[4].account + "_eid"], set_password_to: "Password@2022" });
+    let ret = await SDK.post("tnt/employee/setpassword", {
+      eids: [testUsers[4].account + "_eid"],
+      set_password_to: "Password@2022",
+    });
     expect(ret).to.be.an.object();
     expect(ret.ret).to.equal("done");
   });
   it("Step4: remove employees", async () => {
     let eids: string[] = [];
-    for(let i = 0; i < testUsers.length; i++) {
+    for (let i = 0; i < testUsers.length; i++) {
       let eid = testUsers[i].account + "_eid";
       eids.push(eid);
     }
@@ -172,5 +175,7 @@ describe("Test: ", { timeout: 10000 }, () => {
     for (let i = 0; i < testUsers.length; i++) {
       await SDK.removeUser(testUsers[i].account, SITE_PWD);
     }
+    await SDK.removeUser(SITE_ADMIN.account, SITE_PWD);
   });
-})
+});
+

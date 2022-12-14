@@ -53,10 +53,10 @@ const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
 const TPL_ID = "complete_1_among_many_doers";
 
-const getAccount = (idx:number) => {
+const getAccount = (idx: number) => {
   return testUsers[idx].account;
 };
-const getEid = (idx:number) => {
+const getEid = (idx: number) => {
   return getAccount(idx) + "_eid";
 };
 describe("Test: ", { timeout: 5000 }, () => {
@@ -148,5 +148,6 @@ describe("Test: ", { timeout: 5000 }, () => {
       await SDK.removeUser(testUsers[i].account, SITE_PWD);
     }
     await SDK.removeUser(testUsers[0].account, SITE_PWD);
+    await SDK.removeUser(SITE_ADMIN.account, SITE_PWD);
   });
 });
