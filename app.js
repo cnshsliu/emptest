@@ -565,10 +565,31 @@ const HyperAutomation = {
   },
 
   login: async function (account, password) {
+    let theAccount;
+    let thePassword;
+    if (typeof account === "string") {
+      theAccount = account;
+      thePassword = password;
+      if (!thePassword) {
+        throw new Error("password should not be nullish");
+      }
+    } else if (
+      account.hasOwnProperty("account") &&
+      (account.hasOwnProperty("passwd") || account.hasOwnProperty("password"))
+    ) {
+      theAccount = account.account;
+
+      if (account.hasOwnProperty("passwd")) thePassword = account.passwd;
+      else if (account.hasOwnProperty("password")) thePassword = account.password;
+      else {
+        throw new Error("password should not be nullish");
+      }
+    }
+
     HyperAutomation.setHeader("Content-type", "application/json");
     let response = await HyperAutomation.post("/account/login", {
-      account: account,
-      password: password,
+      account: theAccount,
+      password: thePassword,
     });
     if (response.sessionToken) {
       HyperAutomation.setHeader("authorization", response.sessionToken);

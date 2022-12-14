@@ -5,8 +5,8 @@ const lab = Lab.script();
 const { describe, it, before } = lab;
 
 export { lab };
-const SDK = require("../app.js");
-const fs = require("fs");
+import SDK from "../app.js";
+import fs from "fs";
 const SITE_PWD = "site_password_999";
 const SITE_ADMIN = { account: "lucas2", name: "Lucas2", password: "Pwd@123" };
 const TPL_ID = "test_and_or";
@@ -52,11 +52,11 @@ const testUsers = [
 
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || "./templates";
 
-const getAccount = (number) => {
-  return testUsers[number].account;
+const getAccount = (idx:number) => {
+  return testUsers[idx].account;
 };
-const getEid = (number) => {
-  return getAccount(number) + "_eid";
+const getEid = (idx:number) => {
+  return getAccount(idx) + "_eid";
 };
 describe("Test Revoke: ", { timeout: 5000 }, () => {
   let wfid = "lkh_" + SDK.guid();
