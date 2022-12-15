@@ -105,7 +105,6 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
     expect(employees.length).to.equal(1);
 

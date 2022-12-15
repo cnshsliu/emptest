@@ -104,9 +104,7 @@ describe("Tones load: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -127,7 +125,6 @@ describe("Tones load: ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
@@ -183,7 +180,6 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   }
   it("检查变量", async () => {
     let allvars = await SDK.getKVars(wfid);
-    console.log(allvars);
     expect(allvars["days"].value).to.equal(leave_days + repeat_times - 1);
     expect(allvars["reason"].value).to.equal("Go hospital_" + (repeat_times - 1));
     expect(allvars["extra"].value).to.equal("Thank you_" + (repeat_times - 1));
@@ -205,7 +201,6 @@ describe("Tones load: ", { timeout: 5000 }, () => {
   it("Do activity3 ", { timeout: 5000 }, async () => {
     //wait script node complete by trying to get next running work many times
     ret = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 20);
-    console.log(ret);
     expect(ret.total).to.equal(1);
     expect(ret.objs[0].title).to.equal("Activity3");
 
@@ -227,7 +222,6 @@ describe("Tones load: ", { timeout: 5000 }, () => {
 
   it("Should have no workitem now", { timeout: 10000 }, async () => {
     let wlist = await SDK.getWorklist(getEid(0), { wfid: wfid, status: "ST_RUN" }, 3);
-    console.log(wlist);
     expect(wlist.total).to.equal(0);
   });
 

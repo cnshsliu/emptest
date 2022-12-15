@@ -81,15 +81,15 @@ describe("Test: ", () => {
   it("Register the same account again should fail", async () => {
     SDK.setHttpTimeout(5000);
     let res = await SDK.register(testUsers[0].account, testUsers[0].name, testUsers[0].passwd);
-    expect(res?.error).to.equal("DUPLICATE_TENANT_DOMAIN");
-    expect(res.message).to.include("already exists");
+    expect(res?.error).to.equal("ALREADY_EXIST");
+    expect(res.message).to.include("already registered");
   });
 
   it("Profile", async () => {
     let ret = await SDK.profile();
     expect(ret.user.username).to.equal(testUsers[0].name);
     expect(ret.employee.nickname).to.equal(testUsers[0].name);
-    expect(ret.tenant.name).to.equal("Org of " + testUsers[0].name);
+    expect(ret.tenant.name).to.equal("Org of " + testUsers[0].account);
 
     //登出
     ret = await SDK.logout();

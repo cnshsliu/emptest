@@ -106,9 +106,7 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -129,7 +127,6 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
@@ -175,7 +172,6 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
     let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
       input_action1: "action1",
     });
-    console.log(ret);
     expect(ret.todoid).to.equal(wlist.objs[0].todoid);
     action1_todoid = ret.todoid;
   });
@@ -188,7 +184,6 @@ describe("Test Revoke: ", { timeout: 5000 }, () => {
     expect(["action21", "action22"]).to.include(wlist.objs[1].nodeid);
 
     let fullInfo = await SDK.getWorkInfo(wfid, action1_todoid);
-    console.log(fullInfo);
     expect(fullInfo.following_actions).to.have.length(2);
     expect(fullInfo.following_actions[0].nodeid).to.equal("action21");
     expect(fullInfo.following_actions[1].nodeid).to.equal("action22");
