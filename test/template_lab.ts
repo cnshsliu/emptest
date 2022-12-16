@@ -107,7 +107,6 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
     expect(employees.length).to.equal(1);
 
@@ -129,7 +128,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
@@ -177,7 +175,6 @@ describe("Test: ", { timeout: 5000 }, () => {
   });
   it("Rename the copy to lkh1123", async () => {
     const ret = await SDK.renameTemplate("lkh0000", "lkh1123");
-    console.log(ret);
     expect(ret.tplid).to.equal("lkh1123");
   });
 
@@ -197,7 +194,6 @@ describe("Test: ", { timeout: 5000 }, () => {
 
   it("Check existing lkh1123", async () => {
     let ret = await SDK.readTemplate("lkh1123");
-    console.log(ret);
     expect(ret?.error).to.equal("TEMPLATE_NOT_FOUND");
   });
 

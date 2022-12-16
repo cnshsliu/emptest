@@ -36,7 +36,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
   let tmpworkid = "";
   // SDK.setServer("http://emp.localhost:5008");
   SDK.setServer("http://emp.localhost");
-  SDK.debug(true);
+  SDK.debug(false);
   it("prepare admin account ", async () => {
     try {
       await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
@@ -79,9 +79,7 @@ describe("Callback: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -102,7 +100,6 @@ describe("Callback: ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });

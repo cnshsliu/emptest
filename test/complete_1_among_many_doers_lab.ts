@@ -105,9 +105,7 @@ describe("Complete 1 among many doers ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -128,7 +126,6 @@ describe("Complete 1 among many doers ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
@@ -301,7 +298,6 @@ describe("Complete 1 among many doers ", { timeout: 5000 }, () => {
     let ret = await SDK.deleteTeam("simple_leave_team");
     expect(ret.deletedCount).to.equal(1);
     ret = await SDK.getTeamFullInfo("simple_leave_team");
-    console.log(ret);
     expect(ret.statusCode).to.equal(400);
     expect(ret.error).to.equal("TEAM_NOT_FOUND");
   });

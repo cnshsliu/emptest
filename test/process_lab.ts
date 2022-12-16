@@ -107,9 +107,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -130,7 +128,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
@@ -160,7 +157,6 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("Checking existing from list", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
     let ret = await SDK.workflowSearch({ tplid: TPL_ID + "_copy" });
-    console.log(ret);
     expect(ret.objs.length).to.be.above(0);
     for (let i = 0; i < ret.objs.length; i++) {
       let wfid = ret.objs[i].wfid;

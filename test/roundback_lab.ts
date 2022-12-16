@@ -105,9 +105,7 @@ describe("Test: ", { timeout: 5000 }, () => {
 
     await SDK.login(testUsers[0].account, testUsers[0].passwd);
     //获得组织全部信息
-    // console.log(myorg);
     let employees = await SDK.orgGetEmployees({ eids: [], active: 1 });
-    console.log(employees);
     expect(employees.length).to.equal(1);
 
     //审批测试用户加入申请
@@ -128,7 +126,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(employees.length).to.equal(testUsers.length);
     //取myorg，同样返回的joinapps应该是空数组
     myorg = await SDK.orgMyOrg();
-    //console.log(myorg);
     expect(myorg.joinapps).to.be.an.array();
     expect(myorg.joinapps).to.be.empty();
   });
@@ -155,7 +152,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     });
     expect(wlist.total).to.equal(1);
     let fullInfo = await SDK.getWorkInfo(wfid, wlist.objs[0].todoid);
-    console.log(fullInfo);
     expect(fullInfo.from_actions).to.have.length(0);
     todoid_action1_round_1 = wlist.objs[0].todoid;
     let ret = await SDK.doWork(getEid(0), wlist.objs[0].todoid, {
@@ -179,7 +175,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(wlist.total).to.equal(1);
     expect(wlist.objs[0].nodeid).to.equal("action3");
     let fullInfo = await SDK.getWorkInfo(wfid, todoid_action2_round_1);
-    console.log(fullInfo);
     expect(fullInfo.from_actions[0].nodeid).to.equal("switch1");
     expect(fullInfo.from_actions[0].level).to.equal(0);
     expect(fullInfo.from_actions[1].nodeid).to.equal("action1");
@@ -196,11 +191,9 @@ describe("Test: ", { timeout: 5000 }, () => {
     let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1", {
       days: 8,
     });
-    console.log(ret);
     expect(ret.workid).to.be.a.string();
     workid_action1_round_2 = ret.workid; //Action1 最新workitemde id
     let kvars = await SDK.getKVars(wfid, workid_action1_round_2);
-    console.log(kvars);
     expect(kvars.days.value).to.equal(8);
   });
   let workid_action2_round_2 = "";
@@ -211,7 +204,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     let workid = ret.workid;
     workid_action2_round_2 = workid;
     let fullInfo = await SDK.getWorkInfo(wfid, ret.todoid);
-    console.log(fullInfo.from_actions);
     expect(fullInfo.from_actions.length).to.equal(2);
     expect(fullInfo.from_actions[0].nodeid).to.equal("switch1");
     expect(fullInfo.from_actions[1].nodeid).to.equal("action1");
@@ -225,7 +217,6 @@ describe("Test: ", { timeout: 5000 }, () => {
   it("2> Do action3", { timeout: 5000 }, async () => {
     await SDK.sleep(1000);
     let ret = await SDK.doWorkByNode(getEid(0), wfid, "action3");
-    console.log(ret);
     expect(ret.nodeid).to.equal("action3");
     expect(ret.status).to.equal("ST_DONE");
   });
@@ -234,7 +225,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     let ret = await SDK.doWorkByNode(getEid(0), wfid, "action1", {
       days: 3,
     });
-    console.log(ret);
     expect(ret.nodeid).to.equal("action1");
     expect(ret.status).to.equal("ST_DONE");
   });

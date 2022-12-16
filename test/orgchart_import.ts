@@ -100,13 +100,11 @@ describe("Test: ", { timeout: 5000 }, () => {
     let data = new FormData();
     await data.append("file", fs.createReadStream("./static/orgchart.xlsx"));
     let ret = await SDK.importFromExcel(data);
-    console.log(ret);
     expect(ret.ret).to.equal("ok");
 
     HyperAutomation.setHeader("Content-type", "application/json");
     //
     ret = await SDK.post("orgchart/allous", {});
-    console.log(ret);
     // cons
     expect(ret.length).to.equal(4);
     expect(ret[0].ou).to.equal("root");
@@ -115,7 +113,6 @@ describe("Test: ", { timeout: 5000 }, () => {
     expect(ret[1].eid).to.equal("OU---");
 
     ret = await SDK.post("orgchart/expand", { ou: "root", include: true });
-    console.log(ret);
     expect(ret.length).to.equal(5);
     expect(ret[0].ou).to.equal("root");
     expect(ret[0].account).to.equal(getAccount(0));
