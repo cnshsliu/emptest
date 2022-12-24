@@ -82,7 +82,7 @@ describe("Test: ", () => {
     SDK.setHttpTimeout(5000);
     let res = await SDK.register(testUsers[0].account, testUsers[0].name, testUsers[0].passwd);
     expect(res?.error).to.equal("ALREADY_EXIST");
-    expect(res.message).to.include("already registered");
+    expect(res.message).to.include("has been occupied");
   });
 
   it("Profile", async () => {
