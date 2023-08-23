@@ -568,7 +568,7 @@ describe("HeTongShenPi", { timeout: 5000 }, () => {
         await SDK.login(activeUser);
         await SDK.sleep(steps[s].sleep ?? 500);
         let wlist: any;
-        for (let i = 0; i < 30; i++) {
+        for (let round = 0; round < 30; round++) {
           wlist = await SDK.getWorklist(activeUser.eid, {
             wfid: wfid,
             status: "ST_RUN",

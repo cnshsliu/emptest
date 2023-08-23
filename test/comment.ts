@@ -11,18 +11,43 @@ const SITE_PWD = 'site_password_999';
 const SITE_ADMIN = { account: 'lucas2', name: 'Lucas2', password: 'Pwd@123' };
 
 const testUsers = [
-	{ account: 'bya_test_user_lkh', passwd: 'Password@123', name: 'UserLKH_' + SDK.randomString(7) },
-	{ account: 'bya_test_user_001', passwd: 'Password@123', name: 'User001_' + SDK.randomString(7) },
-	{ account: 'bya_test_user_002', passwd: 'Password@123', name: 'User002_' + SDK.randomString(7) },
-	{ account: 'bya_test_user_003', passwd: 'Password@123', name: 'User003_' + SDK.randomString(7) },
-	{ account: 'bya_test_user_004', passwd: 'Password@123', name: 'User004_' + SDK.randomString(7) },
-	{ account: 'bya_test_user_005', passwd: 'Password@123', name: 'User005_' + SDK.randomString(7) },
-	{ account: 'bya_test_user_006', passwd: 'Password@123', name: 'User006_' + SDK.randomString(7) },
+	{
+		account: 'comment_test_user_lkh',
+		passwd: 'Password@123',
+		name: 'UserLKH_' + SDK.randomString(7),
+	},
+	{
+		account: 'comment_test_user_001',
+		passwd: 'Password@123',
+		name: 'User001_' + SDK.randomString(7),
+	},
+	{
+		account: 'comment_test_user_002',
+		passwd: 'Password@123',
+		name: 'User002_' + SDK.randomString(7),
+	},
+	{
+		account: 'comment_test_user_003',
+		passwd: 'Password@123',
+		name: 'User003_' + SDK.randomString(7),
+	},
+	{
+		account: 'comment_test_user_004',
+		passwd: 'Password@123',
+		name: 'User004_' + SDK.randomString(7),
+	},
+	{
+		account: 'comment_test_user_005',
+		passwd: 'Password@123',
+		name: 'User005_' + SDK.randomString(7),
+	},
+	{
+		account: 'comment_test_user_006',
+		passwd: 'Password@123',
+		name: 'User006_' + SDK.randomString(7),
+	},
 ];
-
 const TEST_TEMPLATE_DIR = process.env.TEST_TEMPLATE_DIR || './templates';
-
-const TPL_ID = 'my_byall';
 
 const getAccount = (idx: number) => {
 	return testUsers[idx].account;
@@ -30,11 +55,13 @@ const getAccount = (idx: number) => {
 const getEid = (idx: number) => {
 	return getAccount(idx) + '_eid';
 };
-describe('byall', { timeout: 5000 }, () => {
+describe('Test and_or logic', { timeout: 5000 }, () => {
+	SDK.setServer('https://emp.localhost');
 	let wfid = 'lkh_' + SDK.guid();
-	let tmp1, tmp2;
+	let tmptodoid = '';
 	// SDK.setServer("http://emp.localhost:5008");
-	SDK.setServer('http://emp.localhost');
+	SDK.debug(false);
+
 	it('prepare admin account ', async () => {
 		try {
 			await SDK.register(SITE_ADMIN.account, SITE_ADMIN.name, SITE_ADMIN.password);
@@ -101,97 +128,86 @@ describe('byall', { timeout: 5000 }, () => {
 		expect(myorg.joinapps).to.be.an.array();
 		expect(myorg.joinapps).to.be.empty();
 	});
-	it('Upload template', async () => {
+	it('Step 2: Upload template', async () => {
 		const ret = await SDK.putTemplate(
-			fs.readFileSync(TEST_TEMPLATE_DIR + '/byall.xml', 'utf8'),
-			TPL_ID,
+			fs.readFileSync(TEST_TEMPLATE_DIR + '/test_and_or.xml', 'utf8'),
+			'test_comment',
+			'Desc: Test And Or Logic',
 		);
-		expect(ret.tplid).to.equal(TPL_ID);
+		expect(ret.tplid).to.equal('test_comment');
+		expect(ret.desc).to.equal('Desc: Test And Or Logic');
 	});
 
-	it('Configure byall team', async () => {
-		let teamMap = {
-			alldoers: [
-				{ eid: getEid(1), cn: 'manager1' },
-				{ eid: getEid(2), cn: 'manager2' },
-			],
-		};
-		let ret = await SDK.uploadTeam('byall_team', teamMap);
-		expect(ret.teamid).to.equal('byall_team');
+	it('Step 3: Start Workflow', async () => {
+		await SDK.login(testUsers[0].account, testUsers[0].passwd);
+		const pbo = 'http://www.google.com';
+		const ret = await SDK.startWorkflow('test_comment', wfid, '', pbo);
+		expect(ret.wfid).to.equal(wfid);
 	});
 
-	it('START Workflow', async () => {
-		let ret = await SDK.startWorkflow(TPL_ID, wfid, 'byall_team');
+	it('Step 4: Check PBO', async () => {
+		await SDK.sleep(500);
+		let pbo = await SDK.getPbo(wfid, 'text');
+		expect(pbo[0].text).to.equal('http://www.google.com');
+		pbo = await SDK.setPbo(wfid, 'abcd', 'text', 'step1');
+		await SDK.sleep(3000);
+		pbo = await SDK.getPbo(wfid, 'text');
+		expect(pbo[1].text).to.equal('abcd');
+
+		await SDK.setPbo(wfid, ['abcd', 'hahaha'], 'text', 'step1');
+		pbo = await SDK.getPbo(wfid, 'text');
+		expect(Array.isArray(pbo)).to.equal(true);
+		expect(pbo.length).to.equal(4);
+		expect(pbo[3].text).to.equal('hahaha');
+	});
+
+	let action1_todoid = '';
+	it('Step 5: Do action1', { timeout: 5000 }, async () => {
 		//get worklist
-		await SDK.sleep(500);
-		tmp1 = await SDK.getWorklist(getEid(1), {
+		await SDK.sleep(1000);
+		let wlist = await SDK.getWorklist(getEid(0), {
 			wfid: wfid,
-			nodeid: 'hellohyperflow',
+			nodeid: 'action1',
 			status: 'ST_RUN',
 		});
-		expect(tmp1.total).to.equal(1);
-		expect(tmp1.objs.length).to.equal(1);
-	});
+		expect(wlist.total).to.equal(1);
 
-	it("Check manager2's worklist", async () => {
-		await SDK.sleep(500);
-		tmp2 = await SDK.getWorklist(getEid(2), {
-			wfid: wfid,
-			nodeid: 'hellohyperflow',
-			status: 'ST_RUN',
+		// let fullInfo = await SDK.getWorkInfo(wfid, wlist.objs[0].todoid);
+		// expect(fullInfo.from_action_todoid).to.be.undefined();
+
+		let action1_todoid = wlist.objs[0].todoid;
+		let ret = await SDK.post('/comment/addforbiz', {
+			objtype: 'TODO',
+			objid: action1_todoid,
+			content: 'test comment 1',
 		});
-		expect(tmp2.total).to.equal(1);
-		expect(tmp2.objs.length).to.equal(1);
-	});
-
-	it('do manager1 work', async () => {
-		await SDK.sleep(500);
-		let ret = await SDK.doWork(getEid(1), tmp1.objs[0].todoid, {
-			reason: 'Go hospital',
-			extra: 'Thank you',
+		expect(ret.comments.length).to.equal(1);
+		expect(ret.thisComment.content).to.equal(ret.comments[0].content);
+		ret = await SDK.post('/comment/addforbiz', {
+			objtype: 'TODO',
+			objid: action1_todoid,
+			content: 'test comment 2',
 		});
-		expect(ret.todoid).to.equal(tmp1.objs[0].todoid);
-	});
+		expect(ret.comments.length).to.equal(2);
+		expect(ret.thisComment.content).to.equal(ret.comments[0].content);
+		expect(ret.comments[0].content).to.equal('test comment 2');
+		expect(ret.comments[1].content).to.equal('test comment 1');
 
-	it('Check workflow status', async () => {
-		await SDK.sleep(1000);
-		let ret = await SDK.getStatus(wfid);
-		expect(ret).to.equal('ST_RUN');
-	});
-
-	it("do manager2's work", async () => {
-		await SDK.sleep(500);
-		let ret = await SDK.doWork(getEid(2), tmp2.objs[0].todoid, {
-			reason: 'Go hospital',
-			extra: 'Thank you',
+		ret = await SDK.post('/comment/workflow/load', {
+			wfid: wlist.objs[0].wfid,
 		});
-		expect(ret.todoid).to.equal(tmp2.objs[0].todoid);
-	});
-
-	it('Check workflow status', async () => {
-		await SDK.sleep(1000);
-		let ret = await SDK.getStatus(wfid);
-		expect(ret).to.equal('ST_DONE');
-	});
-	/*
-	 */
-
-	it('Delete team', async () => {
-		let ret = await SDK.deleteTeam('byall_team');
-		expect(ret.deletedCount).to.equal(1);
-		ret = await SDK.getTeamFullInfo('byall_team');
-		expect(ret.teamid).to.be.undefined();
+		expect(ret[0].content).to.equal('test comment 2');
+		expect(ret[1].content).to.equal('test comment 1');
 	});
 
 	it('cleaning up', async () => {
 		await SDK.sleep(3000);
-		await SDK.destroyWorkflowByTplid(TPL_ID);
-		await SDK.deleteTemplateByTplid(TPL_ID);
+		await SDK.destroyWorkflowByTplid('test_comment');
+		await SDK.deleteTemplateByTplid('test_comment');
 		await SDK.login(SITE_ADMIN.account, SITE_ADMIN.password);
-		for (let i = 1; i < testUsers.length; i++) {
+		for (let i = 0; i < testUsers.length; i++) {
 			await SDK.removeUser(testUsers[i].account, SITE_PWD);
 		}
-		await SDK.removeUser(testUsers[0].account, SITE_PWD);
 		await SDK.removeUser(SITE_ADMIN.account, SITE_PWD);
 	});
 });
